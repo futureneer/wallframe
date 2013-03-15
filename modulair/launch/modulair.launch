@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="modulair" name="modulair_main" type="modulair_main"/>
+</launch>

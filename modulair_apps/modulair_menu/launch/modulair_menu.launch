@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="modulair_menu" name="modulair_menu_run" type="modulair_menu_run"/>
+</launch>

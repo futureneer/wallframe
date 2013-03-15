@@ -11,6 +11,11 @@
   <depend package="roscpp"/>
   <depend package="rospy"/>
 
+  <!-- MODULAIR APPLICATIONS-->
+  <depend package="modulair_common"/>
+  <depend package="modulair_menu"/>
+    
+    
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmodulair"/>  
   </export>

@@ -1,0 +1,19 @@
+<package>
+  <description brief="modulair_menu">
+
+     modulair_menu
+
+  </description>
+  <author>Kelleher Guerin</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/modulair_menu</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+
+  <!-- MODULAIR RESOURCES-->
+  <depend package="modulair_common"/>
+
+</package>
+
+
