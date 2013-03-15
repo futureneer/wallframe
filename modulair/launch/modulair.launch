@@ -1,3 +1,21 @@
 <launch>
+
   <node pkg="modulair" name="modulair_main" type="modulair_main"/>
+
+  <rosparam>
+
+    modulair:
+      directories:
+        background_image: sample_images/back.png
+        appmenu_dir: assets_app_menu_3D
+        picflier_image_dir: /media/raid_storage/archive
+      params:
+        x: 1680
+        y: 20
+        width: 5760
+        height: 3240
+
+  </rosparam>
+
+
 </launch>

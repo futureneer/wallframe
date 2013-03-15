@@ -7,11 +7,20 @@
 #include <QtGui/QApplication>
 #include <QObject>
 
+#include <ros/ros.h>
+
 namespace modulair{
   class ModulairMenu{
     public:
-      ModulairMenu();
+      ModulairMenu(ros::NodeHandle n);
       ~ModulairMenu();
+
+      void build();
+      void start(){};
+      void stop(){};
+  private:
+  	  ros::NodeHandle node_;
+      ModulairMainWindow* window_;
   };
 }
 

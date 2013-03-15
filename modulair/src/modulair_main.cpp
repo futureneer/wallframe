@@ -8,9 +8,9 @@
 int main(int argc, char* argv[]){
 
   ros::init(argc,argv, "modulair_menu");
-  ROS_ERROR_STREAM("STARTING MODULAIR MENU");
+  ROS_INFO_STREAM("STARTING MODULAIR MENU");
   int ex = system("roslaunch modulair_menu modulair_menu.launch");
-  ROS_ERROR_STREAM("MODULAIR MENU STARTED SUCCESSFULLY");
+  ROS_INFO_STREAM("MODULAIR MENU STARTED SUCCESSFULLY");
   
   return 0;
 }

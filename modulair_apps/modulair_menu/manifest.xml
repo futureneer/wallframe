@@ -14,6 +14,10 @@
   <!-- MODULAIR RESOURCES-->
   <depend package="modulair_common"/>
 
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmodulair_menu"/>
+  </export>
+
 </package>
 
 
