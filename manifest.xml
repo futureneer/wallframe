@@ -1,13 +1,19 @@
 <package>
   <description brief="modulair">
 
-     modulair
+     A modular version of the Layered Application Interface for Research
 
   </description>
   <author>Kelleher Guerin</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/modulair</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmodulair"/>  
+  </export>
 
 </package>
 
