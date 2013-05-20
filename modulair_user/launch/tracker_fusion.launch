@@ -1,0 +1,5 @@
+<launch>
+
+	<!--	launch kinect sensor -->
+  <node pkg="openni_tracker_fusion" type="tracker_fusion_app" name="tracker_fusion_app" />
+</launch>

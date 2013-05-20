@@ -1,0 +1,22 @@
+<launch>
+	<arg name="camera1" default="kinect1" />
+	<arg name="device_id1" default="#1" />
+
+	<include file="$(find openni_launch)/launch/openni.launch">
+		<arg name="camera" value="$(arg camera1)" />
+		<arg name="device_id" value="$(arg device_id1)" />
+		<arg name="rgb_camera_info_url"   value="file://$(env ROS_HOME)/camera_info/rgb_$(arg device_id1).yaml" />
+		<arg name="depth_camera_info_url" value="file://$(env ROS_HOME)/camera_info/depth_$(arg device_id1).yaml" />
+	</include>
+
+	<node name="XnSensorServerKillerNode" output="screen" pkg="openni_tracker_improved" type="openni_tracker" launch-prefix="bash $(find openni_multi_launcher)/xn_sensor_server_cleanup.sh" />
+	<node name="tracker1" output="screen" pkg="openni_tracker_improved" type="openni_tracker" >
+		<param name="device_id" type="str" value="$(arg device_id1)" />
+		<param name="tf_prefix" value="kinect_tracker_1" />
+	</node>
+
+	 <node pkg="tf" type="static_transform_publisher" name="kinect1_transformation" args=" 0 0 1.25 -1.5707  .5 0  /world /kinect1_link 10"/> 
+	
+	<node pkg="tf" type="static_transform_publisher" name="kinect1_tracker_trans" args="0 0 0 0 0 0 /kinect1_link /kinect_tracker_1/openni_depth_frame 10"/>
+
+</launch>
