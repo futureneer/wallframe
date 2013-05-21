@@ -1,0 +1,10 @@
+<launch>
+
+	<include file="$(find modulair_tracker)/launch/right_tracker.launch"></include>
+	<include file="$(find modulair_tracker)/launch/left_tracker.launch"></include>
+
+	<!-- Transform for wall to world coordinates so we can broadcast the kinect in wall coords -->
+	<node pkg="tf" type="static_transform_publisher" name="world_to_wall" args="0 0 1.0 0 0 1.5707  /world /wall_frame 10"/>
+	
+
+</launch>

@@ -34,6 +34,9 @@ using namespace openni_wrapper;
 
 string device_id = ""; //TODO: make this local once we are able to make more than one UserGenerator in a single thread
 
+std::string prefix;
+static ros::Publisher user_array_publisher;
+
 //BEGIN TF PUBLISHER FUNCTIONS
 void publishTransform(modulair_msgs::TrackerUser& user_msg, XnUserID const& user, XnSkeletonJoint const& joint, string const& frame_id, string const& child_frame_id, EnumWrapper *kinect) {
     static tf::TransformBroadcaster br;
@@ -100,14 +103,19 @@ void publishTransforms(const std::string& frame_id, EnumWrapper *kinect) {
     static std::map<int, std::vector<float> > CoM_Z_History; //<uid, CoM >
 
     /////////////// KGUERIN /////////////////////
-    ros::NodeHandle n;
-    // std::string prefix = tf::getPrefixParam(n);
-    std::string prefix;
-    ros::param::get("~/tf_prefix",prefix);
+    // ros::NodeHandle n;
+    // // std::string prefix = tf::getPrefixParam(n);
+    // std::string prefix;
+    // ros::param::get("~/tf_prefix",prefix);
 
 
+    // std::ostringstream topic;
+    // topic << "/modulair/users/raw/" << prefix;
+    // std::string topic_name = std::string(topic.str());
 
-    static ros::Publisher user_array_publisher = n.advertise<modulair_msgs::TrackerUserArray>("/modulair/users/raw", 10);
+    // // ROS_WARN_STREAM("MODULAIR TRACKER: Broadcasting user data on: " << topic_name);
+
+    // static ros::Publisher user_array_publisher = n.advertise<modulair_msgs::TrackerUserArray>(topic_name.c_str(), 10);
 
     modulair_msgs::TrackerUserArray user_array_msg;
     user_array_msg.numUsers = 0;
@@ -129,6 +137,7 @@ void publishTransforms(const std::string& frame_id, EnumWrapper *kinect) {
         user_msg.header.frame_id = "/" + prefix + "/" + frame_id;
         // user_msg.header.frame_id = frame_id;
         user_msg.uid = user;
+        user_msg.tracker_id = prefix;
         // TrackerUser center of Mass
         geometry_msgs::Vector3 com_msg;
         com_msg.x = CoM.X;
@@ -229,6 +238,16 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "openni_tracker");
 	ros::NodeHandle nh;
 	ros::NodeHandle pnh("~"); //private node handler
+
+    ros::param::get("~/tf_prefix",prefix);
+
+    std::ostringstream topic;
+    topic << "/modulair/tracker/users/";
+    std::string topic_name = std::string(topic.str());
+
+    ROS_WARN_STREAM("MODULAIR TRACKER: Broadcasting user data on: " << topic_name);
+
+    user_array_publisher = nh.advertise<modulair_msgs::TrackerUserArray>(topic_name.c_str(), 10);
 
 	xn::Context g_Context;
 	xn::NodeInfoList nodeList;

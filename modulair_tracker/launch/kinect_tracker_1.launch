@@ -15,7 +15,7 @@
 		<param name="tf_prefix" value="kinect_tracker_1" />
 	</node>
 
-	 <node pkg="tf" type="static_transform_publisher" name="kinect1_transformation" args=" 0 0 1.25 -1.5707  .5 0  /world /kinect1_link 10"/> 
+	<node pkg="tf" type="static_transform_publisher" name="kinect1_transformation" args=" 0 0 1.25 -1.5707  .5 0  /world /kinect1_link 10"/> 
 	
 	<node pkg="tf" type="static_transform_publisher" name="kinect1_tracker_trans" args="0 0 0 0 0 0 /kinect1_link /kinect_tracker_1/openni_depth_frame 10"/>
 

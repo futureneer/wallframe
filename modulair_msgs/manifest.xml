@@ -10,7 +10,9 @@
   <url>http://ros.org/wiki/modulair_msgs</url>
   <depend package="roscpp"/>
   <depend package="rospy"/>
-
+  <depend package="std_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="geometry_msgs"/>
 </package>
 
 
