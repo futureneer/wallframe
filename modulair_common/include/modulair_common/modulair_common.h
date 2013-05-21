@@ -20,7 +20,7 @@ namespace modulair{
     Q_OBJECT // must include this if you use Qt signals/slots
   public:
     ModulairMainWindow(QWidget* parent, QString name, ros::NodeHandle n);
-    ~ModulairMainWindow();
+    ~ModulairMainWindow(){};
     bool build();
   private:
     ros::NodeHandle node_;

@@ -1,0 +1,16 @@
+<package>
+  <description brief="modulair_msgs">
+
+     modulair_msgs
+
+  </description>
+  <author>Kelleher Guerin</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/modulair_msgs</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+
+</package>
+
+
