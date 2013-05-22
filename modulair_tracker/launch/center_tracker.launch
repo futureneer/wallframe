@@ -16,6 +16,7 @@
 	<node name="tracker1" output="screen" pkg="modulair_tracker" type="modulair_tracker_node" >
 		<param name="device_id" type="str" value="$(arg tracker_id)" />
 		<param name="tf_prefix" value="tracker_center" />
+		<param name="relative_frame" value="/wall_frame" />
 	</node>
 
 	<!-- TF alignment file -->
