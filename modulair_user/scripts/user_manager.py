@@ -18,7 +18,7 @@ from OneEuroFilter import OneEuroFilter
 
 from math import sqrt, pow
 import itertools
-from itertools import izip
+from itertools import izip 
 
 class User():
   def __init__(self,uid,base_frame,tf_listener,filter_freq,filter_mincutoff,filter_beta,filter_dcutoff):
@@ -196,13 +196,6 @@ class User():
     msg.translations_filtered = self.translations_merged_filtered_
     msg.translations_mm = self.translations_merged_filtered_mm_
     self.current_state_msg = msg
-
-    print(str(msg.translations[0].x) + " , " + 
-          str(msg.translations[0].y) + " , " +
-          str(msg.translations[0].z) + " , " + " vs " + 
-          str(msg.translations_filtered[0].x) + " , " +
-          str(msg.translations_filtered[0].y) + " , " +
-          str(msg.translations_filtered[0].z))
     pass
 
 class UserManager():
@@ -215,6 +208,7 @@ class UserManager():
 
     # ROS 
     rospy.init_node('modulair_user_manager',anonymous=True)
+    self.time_ = rospy.get_time()
     # ROS Params
     self.com_dist_thresh_   = rospy.get_param('modulair/user/center_distance_threshold',100) # default is 100 mm
     self.base_frame_        = rospy.get_param('modulair/user/base_frame','wall_frame')
@@ -233,9 +227,14 @@ class UserManager():
     rospy.logwarn('Modulair UserManager: Started')
 
     while not rospy.is_shutdown():
+      # self.time_ = rospy.get_time()
+
       self.update_user_state()
       self.check_users_exist()
       self.publish_user_state()
+
+      # print str(rospy.get_time() - self.time_)
+      
       rospy.sleep(1.0/self.run_frequency_) # for 30 hz operation
 
     # Finish
@@ -248,6 +247,7 @@ class UserManager():
       state_packet.users.append(user.current_state_msg)
 
     self.user_state_pub_.publish(state_packet)
+
     # print state_packet
     pass
 
