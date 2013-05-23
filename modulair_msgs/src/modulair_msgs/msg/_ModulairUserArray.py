@@ -7,7 +7,7 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class ModulairUserArray(roslib.message.Message):
-  _md5sum = "f8a126c54b5d0dd49327d52193972c22"
+  _md5sum = "8f1f6815df3078e4954c54834a857c45"
   _type = "modulair_msgs/ModulairUserArray"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """# This message contains a vector of openni_msgs/User messages.
@@ -22,6 +22,7 @@ uint8 modulair_id
 string[] frame_names
 geometry_msgs/Transform[] transforms
 geometry_msgs/Vector3[] translations
+geometry_msgs/Vector3[] translations_filtered
 geometry_msgs/Vector3[] translations_mm
 
 ================================================================================
@@ -141,6 +142,11 @@ float64 w
         for val2 in val1.translations:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        length = len(val1.translations_filtered)
+        buff.write(_struct_I.pack(length))
+        for val2 in val1.translations_filtered:
+          _x = val2
+          buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
         length = len(val1.translations_mm)
         buff.write(_struct_I.pack(length))
         for val2 in val1.translations_mm:
@@ -232,6 +238,17 @@ float64 w
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
+        val1.translations_filtered = []
+        for i in range(0, length):
+          val2 = geometry_msgs.msg.Vector3()
+          _x = val2
+          start = end
+          end += 24
+          (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+          val1.translations_filtered.append(val2)
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
         val1.translations_mm = []
         for i in range(0, length):
           val2 = geometry_msgs.msg.Vector3()
@@ -293,6 +310,11 @@ float64 w
         length = len(val1.translations)
         buff.write(_struct_I.pack(length))
         for val2 in val1.translations:
+          _x = val2
+          buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        length = len(val1.translations_filtered)
+        buff.write(_struct_I.pack(length))
+        for val2 in val1.translations_filtered:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
         length = len(val1.translations_mm)
@@ -385,6 +407,17 @@ float64 w
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
           val1.translations.append(val2)
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
+        val1.translations_filtered = []
+        for i in range(0, length):
+          val2 = geometry_msgs.msg.Vector3()
+          _x = val2
+          start = end
+          end += 24
+          (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+          val1.translations_filtered.append(val2)
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])

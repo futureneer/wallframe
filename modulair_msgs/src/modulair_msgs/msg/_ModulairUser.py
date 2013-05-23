@@ -6,7 +6,7 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class ModulairUser(roslib.message.Message):
-  _md5sum = "7ff0a7d4a17e979596291ec0a383ff91"
+  _md5sum = "7b6f6428a2acc56e0f981cf0238f6685"
   _type = "modulair_msgs/ModulairUser"
   _has_header = True #flag to mark the presence of a Header object
   _full_text = """Header header
@@ -14,6 +14,7 @@ uint8 modulair_id
 string[] frame_names
 geometry_msgs/Transform[] transforms
 geometry_msgs/Vector3[] translations
+geometry_msgs/Vector3[] translations_filtered
 geometry_msgs/Vector3[] translations_mm
 
 ================================================================================
@@ -58,8 +59,8 @@ float64 z
 float64 w
 
 """
-  __slots__ = ['header','modulair_id','frame_names','transforms','translations','translations_mm']
-  _slot_types = ['Header','uint8','string[]','geometry_msgs/Transform[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]']
+  __slots__ = ['header','modulair_id','frame_names','transforms','translations','translations_filtered','translations_mm']
+  _slot_types = ['Header','uint8','string[]','geometry_msgs/Transform[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]']
 
   def __init__(self, *args, **kwds):
     """
@@ -69,7 +70,7 @@ float64 w
     changes.  You cannot mix in-order arguments and keyword arguments.
     
     The available fields are:
-       header,modulair_id,frame_names,transforms,translations,translations_mm
+       header,modulair_id,frame_names,transforms,translations,translations_filtered,translations_mm
     
     @param args: complete set of field values, in .msg order
     @param kwds: use keyword arguments corresponding to message field names
@@ -88,6 +89,8 @@ float64 w
         self.transforms = []
       if self.translations is None:
         self.translations = []
+      if self.translations_filtered is None:
+        self.translations_filtered = []
       if self.translations_mm is None:
         self.translations_mm = []
     else:
@@ -96,6 +99,7 @@ float64 w
       self.frame_names = []
       self.transforms = []
       self.translations = []
+      self.translations_filtered = []
       self.translations_mm = []
 
   def _get_types(self):
@@ -134,6 +138,11 @@ float64 w
       length = len(self.translations)
       buff.write(_struct_I.pack(length))
       for val1 in self.translations:
+        _x = val1
+        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+      length = len(self.translations_filtered)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.translations_filtered:
         _x = val1
         buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
       length = len(self.translations_mm)
@@ -210,6 +219,17 @@ float64 w
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      self.translations_filtered = []
+      for i in range(0, length):
+        val1 = geometry_msgs.msg.Vector3()
+        _x = val1
+        start = end
+        end += 24
+        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        self.translations_filtered.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
       self.translations_mm = []
       for i in range(0, length):
         val1 = geometry_msgs.msg.Vector3()
@@ -255,6 +275,11 @@ float64 w
       length = len(self.translations)
       buff.write(_struct_I.pack(length))
       for val1 in self.translations:
+        _x = val1
+        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+      length = len(self.translations_filtered)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.translations_filtered:
         _x = val1
         buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
       length = len(self.translations_mm)
@@ -330,6 +355,17 @@ float64 w
         end += 24
         (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
         self.translations.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.translations_filtered = []
+      for i in range(0, length):
+        val1 = geometry_msgs.msg.Vector3()
+        _x = val1
+        start = end
+        end += 24
+        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+        self.translations_filtered.append(val1)
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])

@@ -14,18 +14,26 @@ from modulair_msgs.msg import ModulairUserEvent as user_event_msg
 from modulair_msgs.msg import TrackerUser
 from modulair_msgs.msg import TrackerUserArray as tracker_msg
 
+from OneEuroFilter import OneEuroFilter
+
 from math import sqrt, pow
+import itertools
+from itertools import izip
 
 class User():
-  def __init__(self,uid,base_frame,tf_listener):
+  def __init__(self,uid,base_frame,tf_listener,filter_freq,filter_mincutoff,filter_beta,filter_dcutoff):
     self.mid_ = uid
     self.exists_in_tracker = {}
+    self.frame_names_ = []
     self.tracker_uids_ = {}
     self.tracker_packets_ = {}
     self.transforms_ = {}
+    self.transforms_merged_ = []
     self.translations_ = {}
-    self.translations_mm_ = {}
-    self.transform_exists_ = {}
+    self.translations_merged = []
+    self.translations_merged_filtered_ = []
+    self.merged_transform_exists_ = []
+    self.tracker_transform_exists_ = {}
     self.current_state_msg = user_msg()
     self.is_active_ = False
     self.is_primary_ = False
@@ -33,19 +41,25 @@ class User():
     self.exists_ = False
     self.base_frame_ = base_frame
     self.listener_ = tf_listener
+    self.init_filters_ = False
+    self.filter_freq_ = filter_freq
+    self.filter_mincutoff_ = filter_mincutoff
+    self.filter_beta_ = filter_beta
+    self.filter_dcutoff_ = filter_dcutoff
 
-  def get_frames(self):
+  def get_transforms(self):
     self.transforms_.clear()
     self.translations_.clear()
-    self.translations_mm_.clear()
-    self.transform_exists_.clear()
+    self.tracker_transform_exists_.clear()
+    self.translations_merged = []
+    self.frame_names_ = []
     for tracker,uid in self.tracker_uids_.items():
       # print "for tracker " + str(tracker)
       self.transforms_[tracker] = []
       self.translations_[tracker] = []
-      self.translations_mm_[tracker] = []
-      self.transform_exists_[tracker] = []
+      self.tracker_transform_exists_[tracker] = []
       for frame_id in self.tracker_packets_[tracker].frames:
+        self.frame_names_.append(frame_id)
         # print "for frame " + str(frame_id)
         parent_frame = self.base_frame_
         child_frame = '/' + str(tracker) + '/' + frame_id + '_' + str(uid)
@@ -53,10 +67,10 @@ class User():
           (trans,rot) = self.listener_.lookupTransform(parent_frame, child_frame, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
           # print "NO TRANSFORM EXISTS"
-          self.transform_exists_[tracker].append(False)
+          self.tracker_transform_exists_[tracker].append(False)
           continue
         # print "TRANSFORM FOUND"
-        self.transform_exists_[tracker].append(True)
+        self.tracker_transform_exists_[tracker].append(True)
 
         t = Transform()
         t.translation.x = trans[0]
@@ -67,19 +81,79 @@ class User():
         t.rotation.z = rot[2]
         t.rotation.w = rot[3]
 
-        v = Vector3()
-        v.x = trans[0]
-        v.y = trans[1]
-        v.z = trans[2]
-        
-        v_mm = Vector3()
-        v_mm.x = trans[0]*1000.0
-        v_mm.y = trans[1]*1000.0
-        v_mm.z = trans[2]*1000.0
+        tl = Vector3()
+        tl.x = trans[0]
+        tl.y = trans[1]
+        tl.z = trans[2]
+        # print tracker
+        self.transforms_[tracker].append(t)
+        self.translations_[tracker].append(tl)
 
-        self.transforms_[tracker].append(t) 
-        self.translations_[tracker].append(v)
-        self.translations_mm_[tracker].append(v_mm) 
+    ### Initialize filters if not already done
+    if self.init_filters_ == False:
+      self.translation_filters_ = [[OneEuroFilter(self.filter_freq_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
+                        OneEuroFilter(self.filter_freq_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
+                        OneEuroFilter(self.filter_freq_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_)]]*len(self.frame_names_)
+      self.translation_timestamps_ = [[0.0,0.0,0.0]]*len(self.frame_names_)
+      self.translations_merged_filtered_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
+      self.translations_merged_filtered_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
+      self.transforms_merged = [Transform()]*len(self.frame_names_)
+      self.translations_merged_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
+      self.merged_transform_exists_ = [False]*len(self.frame_names_)
+      self.init_filters_ = True
+
+    ### Merge transformation frames from multiple trackers
+    index = 0
+    for frame in iter(self.frame_names_):
+      if len(self.tracker_packets_) > 1:
+        # multiple tracker frames to move
+        best_conf = 0.0
+        best_tracker = ''
+        for tracker,packet in self.tracker_packets_.items():
+          if packet.confs[index] > best_conf:
+            best_conf = packet.confs[index]
+            best_tracker = tracker
+        if self.tracker_transform_exists_[tracker_id][index] == True:
+          self.transforms_merged[index] = self.transforms_[best_tracker][index]
+          self.translations_merged_[index] = self.translations_[best_tracker][index]
+          self.merged_transform_exists_[index] = True
+        else:
+          self.merged_transform_exists_[index] = False
+      else:
+        tracker_id = self.tracker_uids_.keys()[0] # first and only tracker
+        if self.tracker_transform_exists_[tracker_id][index] == True:
+          self.transforms_merged[index] = self.transforms_[tracker_id][index]
+          self.translations_merged_[index] = self.translations_[tracker_id][index]
+          self.merged_transform_exists_[index] = True
+        else:
+          self.merged_transform_exists_[index] = False
+        pass
+      index += 1
+
+    ### Filter frames
+    index = 0
+    for translation, timestamp in izip(self.translations_merged_, self.translation_timestamps_):
+      if self.merged_transform_exists_[index] == True:
+        t = Vector3()
+        # print translation
+        t.x = self.translation_filters_[index][0](translation.x, timestamp[0])
+        timestamp[0] += 1.0/self.filter_freq_
+        t.y = self.translation_filters_[index][1](translation.y, timestamp[1])
+        timestamp[1] += 1.0/self.filter_freq_
+        t.z = self.translation_filters_[index][2](translation.z, timestamp[2])
+        timestamp[2] += 1.0/self.filter_freq_
+
+        self.translations_merged_filtered_[index] = t
+        self.translations_merged_filtered_mm_[index] = Vector3(t.x*1000,t.y*1000,t.z*1000)
+
+      index += 1
+
+
+    pass
+
+  def filter_transforms(self):
+
+    pass
 
   def get_info(self):
     return [self.mid_, self.tracker_uids_]
@@ -99,8 +173,8 @@ class User():
 
   def update_state(self):
 
-    self.get_frames()
-    self.merge_frames_to_state_msg()
+    self.get_transforms()
+    self.merge_to_state_msg()
     self.evaluate_state()
     self.evaluate_events()
     self.update_exists()
@@ -111,38 +185,24 @@ class User():
   def evaluate_events(self):
     pass
 
-  def merge_frames_to_state_msg(self):
+  def merge_to_state_msg(self):
     # Create Packet
     msg = user_msg()
     msg.modulair_id = self.mid_
-    msg.frame_names = self.tracker_packets_.values()[0].frames
+    msg.frame_names = self.frame_names_
 
-    msg.transforms = []
-    msg.translations = []
-    msg.translations_mm = []
-    index = 0
-    for frame in msg.frame_names:
-      if len(self.tracker_packets_) > 1:
-        # multiple tracker frames to move
-        best_conf = 0.0
-        best_tracker = ''
-        for tracker,packet in self.tracker_packets_.items():
-          if packet.confs[index] > best_conf:
-            best_conf = packet.confs[index]
-            best_tracker = tracker
-
-        msg.transforms.append(self.transforms_[best_tracker][index])
-        msg.translations.append(self.translations_[best_tracker][index]) 
-        msg.translations_mm.append(self.translations_mm_[best_tracker][index]) 
-      else:
-        tracker_id = self.tracker_uids_.keys()[0] # first and only tracker
-        if self.transform_exists_[tracker_id][index] == True:
-          msg.transforms.append(self.transforms_[tracker_id][index])
-          msg.translations.append(self.translations_[tracker_id][index])
-          msg.translations_mm.append(self.translations_mm_[tracker_id][index])
-        pass
-      index = index + 1
+    msg.transforms = self.transforms_merged_
+    msg.translations = self.translations_merged_
+    msg.translations_filtered = self.translations_merged_filtered_
+    msg.translations_mm = self.translations_merged_filtered_mm_
     self.current_state_msg = msg
+
+    print(str(msg.translations[0].x) + " , " + 
+          str(msg.translations[0].y) + " , " +
+          str(msg.translations[0].z) + " , " + " vs " + 
+          str(msg.translations_filtered[0].x) + " , " +
+          str(msg.translations_filtered[0].y) + " , " +
+          str(msg.translations_filtered[0].z))
     pass
 
 class UserManager():
@@ -153,18 +213,21 @@ class UserManager():
     self.current_uid = 1
     self.active_trackers_ = []
 
-    # Pull in parameters
-    self.com_dist_thresh_ = rospy.get_param('modulair/user/center_distance_threshold',100) # default is 100 mm
-    self.base_frame_ = rospy.get_param('modulair/user/base_frame','wall_frame')
-
     # ROS 
     rospy.init_node('modulair_user_manager',anonymous=True)
-    # Publisher
+    # ROS Params
+    self.com_dist_thresh_   = rospy.get_param('modulair/user/center_distance_threshold',100) # default is 100 mm
+    self.base_frame_        = rospy.get_param('modulair/user/base_frame','wall_frame')
+    self.filter_mincutoff_  = rospy.get_param('modulair/user/filter_mincutoff',1.0)
+    self.filter_beta_       = rospy.get_param('modulair/user/filter_beta',0.1)    
+    self.filter_dcutoff_    = rospy.get_param('modulair/user/filter_dcutoff',1.0) 
+    self.run_frequency_    = rospy.get_param('modulair/user/run_frequency',1.0)    
+    # Publishers
     self.user_state_pub_ = rospy.Publisher("/modulair/users/state",user_array_msg)
     self.user_event_pub_ = rospy.Publisher("/modulair/users/events",user_event_msg)
     # Subscriber
     self.tracker_sub = rospy.Subscriber("/modulair/tracker/users",tracker_msg,self.tracker_cb)
-
+    # TF Listener
     self.tf_listener_ = tf.TransformListener()
 
     rospy.logwarn('Modulair UserManager: Started')
@@ -173,7 +236,7 @@ class UserManager():
       self.update_user_state()
       self.check_users_exist()
       self.publish_user_state()
-      rospy.sleep(.033) # for 30 hz operation
+      rospy.sleep(1.0/self.run_frequency_) # for 30 hz operation
 
     # Finish
     rospy.logwarn('Modulair UserManager: Finished')
@@ -271,7 +334,13 @@ class UserManager():
         if user_packet.center_of_mass == Vector3(0.0,0.0,0.0):
           pass
         else:
-          u = User(self.current_uid,self.base_frame_,self.tf_listener_)
+          u = User( self.current_uid,
+                    self.base_frame_,
+                    self.tf_listener_,
+                    self.run_frequency_,
+                    self.filter_mincutoff_,
+                    self.filter_beta_,
+                    self.filter_dcutoff_)
           u.tracker_uids_[user_packet.tracker_id] = user_packet.uid
           u.tracker_packets_[user_packet.tracker_id] = user_packet
           u.exists_in_tracker[user_packet.tracker_id] = True

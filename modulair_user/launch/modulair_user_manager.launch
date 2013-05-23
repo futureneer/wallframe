@@ -5,5 +5,9 @@
       user:
         base_frame: wall_frame
         center_distance_threshold: 100
+        filter_mincutoff: 1.0
+        filter_beta: 1.0
+        filter_dcutoff: 1.0
+        run_frequency: 30.0
   </rosparam>
 </launch>
