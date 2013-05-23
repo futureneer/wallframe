@@ -1,11 +1,6 @@
-# This message contains a openni_msgs/user message with and ID, a vector of frames corresponding to each joint, a vector of confidences corresponding to each joint, and a vector of geometry_msgs/Transform messages corresponding to each joint.
-#### 
 Header header
-uint8 uid
-string[] frames
-float64[] confs
+uint8 modulair_id
+string[] frame_names
 geometry_msgs/Transform[] transforms
-geometry_msgs/Vector3[] projective
-geometry_msgs/Vector3[] translation
-geometry_msgs/Vector3[] translation_mm
-geometry_msgs/Vector3 center_of_mass
+geometry_msgs/Vector3[] translations
+geometry_msgs/Vector3[] translations_mm

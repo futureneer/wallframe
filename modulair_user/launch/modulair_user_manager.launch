@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="modulair_user" type="user_manager.py" name="modulair_user_manager" output="screen" />
+  <rosparam>
+    modulair:
+      user:
+        base_frame: wall_frame
+        center_distance_threshold: 100
+  </rosparam>
+</launch>

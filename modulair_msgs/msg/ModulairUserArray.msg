@@ -1,3 +1,4 @@
 # This message contains a vector of openni_msgs/User messages.
 modulair_msgs/ModulairUser[] users
-int8 numUsers
+uint8[] user_ids
+uint8 num_users

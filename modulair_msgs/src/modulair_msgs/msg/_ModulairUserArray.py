@@ -7,26 +7,22 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class ModulairUserArray(roslib.message.Message):
-  _md5sum = "d81bc6820d5b040b9ab15a79a118b478"
+  _md5sum = "f8a126c54b5d0dd49327d52193972c22"
   _type = "modulair_msgs/ModulairUserArray"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """# This message contains a vector of openni_msgs/User messages.
 modulair_msgs/ModulairUser[] users
-int8 numUsers
+uint8[] user_ids
+uint8 num_users
 
 ================================================================================
 MSG: modulair_msgs/ModulairUser
-# This message contains a openni_msgs/user message with and ID, a vector of frames corresponding to each joint, a vector of confidences corresponding to each joint, and a vector of geometry_msgs/Transform messages corresponding to each joint.
-#### 
 Header header
-uint8 uid
-string[] frames
-float64[] confs
+uint8 modulair_id
+string[] frame_names
 geometry_msgs/Transform[] transforms
-geometry_msgs/Vector3[] projective
-geometry_msgs/Vector3[] translation
-geometry_msgs/Vector3[] translation_mm
-geometry_msgs/Vector3 center_of_mass
+geometry_msgs/Vector3[] translations
+geometry_msgs/Vector3[] translations_mm
 
 ================================================================================
 MSG: std_msgs/Header
@@ -70,8 +66,8 @@ float64 z
 float64 w
 
 """
-  __slots__ = ['users','numUsers']
-  _slot_types = ['modulair_msgs/ModulairUser[]','int8']
+  __slots__ = ['users','user_ids','num_users']
+  _slot_types = ['modulair_msgs/ModulairUser[]','uint8[]','uint8']
 
   def __init__(self, *args, **kwds):
     """
@@ -81,7 +77,7 @@ float64 w
     changes.  You cannot mix in-order arguments and keyword arguments.
     
     The available fields are:
-       users,numUsers
+       users,user_ids,num_users
     
     @param args: complete set of field values, in .msg order
     @param kwds: use keyword arguments corresponding to message field names
@@ -92,11 +88,14 @@ float64 w
       #message fields cannot be None, assign default values for those that are
       if self.users is None:
         self.users = []
-      if self.numUsers is None:
-        self.numUsers = 0
+      if self.user_ids is None:
+        self.user_ids = ''
+      if self.num_users is None:
+        self.num_users = 0
     else:
       self.users = []
-      self.numUsers = 0
+      self.user_ids = ''
+      self.num_users = 0
 
   def _get_types(self):
     """
@@ -122,16 +121,12 @@ float64 w
         _x = _v1.frame_id
         length = len(_x)
         buff.write(struct.pack('<I%ss'%length, length, _x))
-        buff.write(_struct_B.pack(val1.uid))
-        length = len(val1.frames)
+        buff.write(_struct_B.pack(val1.modulair_id))
+        length = len(val1.frame_names)
         buff.write(_struct_I.pack(length))
-        for val2 in val1.frames:
+        for val2 in val1.frame_names:
           length = len(val2)
           buff.write(struct.pack('<I%ss'%length, length, val2))
-        length = len(val1.confs)
-        buff.write(_struct_I.pack(length))
-        pattern = '<%sd'%length
-        buff.write(struct.pack(pattern, *val1.confs))
         length = len(val1.transforms)
         buff.write(_struct_I.pack(length))
         for val2 in val1.transforms:
@@ -141,25 +136,24 @@ float64 w
           _v4 = val2.rotation
           _x = _v4
           buff.write(_struct_4d.pack(_x.x, _x.y, _x.z, _x.w))
-        length = len(val1.projective)
+        length = len(val1.translations)
         buff.write(_struct_I.pack(length))
-        for val2 in val1.projective:
+        for val2 in val1.translations:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-        length = len(val1.translation)
+        length = len(val1.translations_mm)
         buff.write(_struct_I.pack(length))
-        for val2 in val1.translation:
+        for val2 in val1.translations_mm:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-        length = len(val1.translation_mm)
-        buff.write(_struct_I.pack(length))
-        for val2 in val1.translation_mm:
-          _x = val2
-          buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-        _v5 = val1.center_of_mass
-        _x = _v5
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-      buff.write(_struct_b.pack(self.numUsers))
+      _x = self.user_ids
+      length = len(_x)
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
+      buff.write(_struct_B.pack(self.num_users))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -177,12 +171,12 @@ float64 w
       self.users = []
       for i in range(0, length):
         val1 = modulair_msgs.msg.ModulairUser()
-        _v6 = val1.header
+        _v5 = val1.header
         start = end
         end += 4
-        (_v6.seq,) = _struct_I.unpack(str[start:end])
-        _v7 = _v6.stamp
-        _x = _v7
+        (_v5.seq,) = _struct_I.unpack(str[start:end])
+        _v6 = _v5.stamp
+        _x = _v6
         start = end
         end += 8
         (_x.secs, _x.nsecs,) = _struct_2I.unpack(str[start:end])
@@ -191,14 +185,14 @@ float64 w
         (length,) = _struct_I.unpack(str[start:end])
         start = end
         end += length
-        _v6.frame_id = str[start:end]
+        _v5.frame_id = str[start:end]
         start = end
         end += 1
-        (val1.uid,) = _struct_B.unpack(str[start:end])
+        (val1.modulair_id,) = _struct_B.unpack(str[start:end])
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        val1.frames = []
+        val1.frame_names = []
         for i in range(0, length):
           start = end
           end += 4
@@ -206,27 +200,20 @@ float64 w
           start = end
           end += length
           val2 = str[start:end]
-          val1.frames.append(val2)
-        start = end
-        end += 4
-        (length,) = _struct_I.unpack(str[start:end])
-        pattern = '<%sd'%length
-        start = end
-        end += struct.calcsize(pattern)
-        val1.confs = struct.unpack(pattern, str[start:end])
+          val1.frame_names.append(val2)
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
         val1.transforms = []
         for i in range(0, length):
           val2 = geometry_msgs.msg.Transform()
-          _v8 = val2.translation
-          _x = _v8
+          _v7 = val2.translation
+          _x = _v7
           start = end
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          _v9 = val2.rotation
-          _x = _v9
+          _v8 = val2.rotation
+          _x = _v8
           start = end
           end += 32
           (_x.x, _x.y, _x.z, _x.w,) = _struct_4d.unpack(str[start:end])
@@ -234,45 +221,35 @@ float64 w
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        val1.projective = []
+        val1.translations = []
         for i in range(0, length):
           val2 = geometry_msgs.msg.Vector3()
           _x = val2
           start = end
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          val1.projective.append(val2)
+          val1.translations.append(val2)
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        val1.translation = []
+        val1.translations_mm = []
         for i in range(0, length):
           val2 = geometry_msgs.msg.Vector3()
           _x = val2
           start = end
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          val1.translation.append(val2)
-        start = end
-        end += 4
-        (length,) = _struct_I.unpack(str[start:end])
-        val1.translation_mm = []
-        for i in range(0, length):
-          val2 = geometry_msgs.msg.Vector3()
-          _x = val2
-          start = end
-          end += 24
-          (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          val1.translation_mm.append(val2)
-        _v10 = val1.center_of_mass
-        _x = _v10
-        start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+          val1.translations_mm.append(val2)
         self.users.append(val1)
       start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      self.user_ids = str[start:end]
+      start = end
       end += 1
-      (self.numUsers,) = _struct_b.unpack(str[start:end])
+      (self.num_users,) = _struct_B.unpack(str[start:end])
       return self
     except struct.error as e:
       raise roslib.message.DeserializationError(e) #most likely buffer underfill
@@ -290,52 +267,47 @@ float64 w
       length = len(self.users)
       buff.write(_struct_I.pack(length))
       for val1 in self.users:
-        _v11 = val1.header
-        buff.write(_struct_I.pack(_v11.seq))
-        _v12 = _v11.stamp
-        _x = _v12
+        _v9 = val1.header
+        buff.write(_struct_I.pack(_v9.seq))
+        _v10 = _v9.stamp
+        _x = _v10
         buff.write(_struct_2I.pack(_x.secs, _x.nsecs))
-        _x = _v11.frame_id
+        _x = _v9.frame_id
         length = len(_x)
         buff.write(struct.pack('<I%ss'%length, length, _x))
-        buff.write(_struct_B.pack(val1.uid))
-        length = len(val1.frames)
+        buff.write(_struct_B.pack(val1.modulair_id))
+        length = len(val1.frame_names)
         buff.write(_struct_I.pack(length))
-        for val2 in val1.frames:
+        for val2 in val1.frame_names:
           length = len(val2)
           buff.write(struct.pack('<I%ss'%length, length, val2))
-        length = len(val1.confs)
-        buff.write(_struct_I.pack(length))
-        pattern = '<%sd'%length
-        buff.write(val1.confs.tostring())
         length = len(val1.transforms)
         buff.write(_struct_I.pack(length))
         for val2 in val1.transforms:
-          _v13 = val2.translation
-          _x = _v13
+          _v11 = val2.translation
+          _x = _v11
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-          _v14 = val2.rotation
-          _x = _v14
+          _v12 = val2.rotation
+          _x = _v12
           buff.write(_struct_4d.pack(_x.x, _x.y, _x.z, _x.w))
-        length = len(val1.projective)
+        length = len(val1.translations)
         buff.write(_struct_I.pack(length))
-        for val2 in val1.projective:
+        for val2 in val1.translations:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-        length = len(val1.translation)
+        length = len(val1.translations_mm)
         buff.write(_struct_I.pack(length))
-        for val2 in val1.translation:
+        for val2 in val1.translations_mm:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-        length = len(val1.translation_mm)
-        buff.write(_struct_I.pack(length))
-        for val2 in val1.translation_mm:
-          _x = val2
-          buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-        _v15 = val1.center_of_mass
-        _x = _v15
-        buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
-      buff.write(_struct_b.pack(self.numUsers))
+      _x = self.user_ids
+      length = len(_x)
+      # - if encoded as a list instead, serialize as bytes instead of string
+      if type(_x) in [list, tuple]:
+        buff.write(struct.pack('<I%sB'%length, length, *_x))
+      else:
+        buff.write(struct.pack('<I%ss'%length, length, _x))
+      buff.write(_struct_B.pack(self.num_users))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -355,12 +327,12 @@ float64 w
       self.users = []
       for i in range(0, length):
         val1 = modulair_msgs.msg.ModulairUser()
-        _v16 = val1.header
+        _v13 = val1.header
         start = end
         end += 4
-        (_v16.seq,) = _struct_I.unpack(str[start:end])
-        _v17 = _v16.stamp
-        _x = _v17
+        (_v13.seq,) = _struct_I.unpack(str[start:end])
+        _v14 = _v13.stamp
+        _x = _v14
         start = end
         end += 8
         (_x.secs, _x.nsecs,) = _struct_2I.unpack(str[start:end])
@@ -369,14 +341,14 @@ float64 w
         (length,) = _struct_I.unpack(str[start:end])
         start = end
         end += length
-        _v16.frame_id = str[start:end]
+        _v13.frame_id = str[start:end]
         start = end
         end += 1
-        (val1.uid,) = _struct_B.unpack(str[start:end])
+        (val1.modulair_id,) = _struct_B.unpack(str[start:end])
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        val1.frames = []
+        val1.frame_names = []
         for i in range(0, length):
           start = end
           end += 4
@@ -384,27 +356,20 @@ float64 w
           start = end
           end += length
           val2 = str[start:end]
-          val1.frames.append(val2)
-        start = end
-        end += 4
-        (length,) = _struct_I.unpack(str[start:end])
-        pattern = '<%sd'%length
-        start = end
-        end += struct.calcsize(pattern)
-        val1.confs = numpy.frombuffer(str[start:end], dtype=numpy.float64, count=length)
+          val1.frame_names.append(val2)
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
         val1.transforms = []
         for i in range(0, length):
           val2 = geometry_msgs.msg.Transform()
-          _v18 = val2.translation
-          _x = _v18
+          _v15 = val2.translation
+          _x = _v15
           start = end
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          _v19 = val2.rotation
-          _x = _v19
+          _v16 = val2.rotation
+          _x = _v16
           start = end
           end += 32
           (_x.x, _x.y, _x.z, _x.w,) = _struct_4d.unpack(str[start:end])
@@ -412,52 +377,41 @@ float64 w
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        val1.projective = []
+        val1.translations = []
         for i in range(0, length):
           val2 = geometry_msgs.msg.Vector3()
           _x = val2
           start = end
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          val1.projective.append(val2)
+          val1.translations.append(val2)
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
-        val1.translation = []
+        val1.translations_mm = []
         for i in range(0, length):
           val2 = geometry_msgs.msg.Vector3()
           _x = val2
           start = end
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          val1.translation.append(val2)
-        start = end
-        end += 4
-        (length,) = _struct_I.unpack(str[start:end])
-        val1.translation_mm = []
-        for i in range(0, length):
-          val2 = geometry_msgs.msg.Vector3()
-          _x = val2
-          start = end
-          end += 24
-          (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
-          val1.translation_mm.append(val2)
-        _v20 = val1.center_of_mass
-        _x = _v20
-        start = end
-        end += 24
-        (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+          val1.translations_mm.append(val2)
         self.users.append(val1)
       start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      self.user_ids = str[start:end]
+      start = end
       end += 1
-      (self.numUsers,) = _struct_b.unpack(str[start:end])
+      (self.num_users,) = _struct_B.unpack(str[start:end])
       return self
     except struct.error as e:
       raise roslib.message.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = roslib.message.struct_I
-_struct_B = struct.Struct("<B")
-_struct_b = struct.Struct("<b")
 _struct_4d = struct.Struct("<4d")
+_struct_B = struct.Struct("<B")
 _struct_2I = struct.Struct("<2I")
 _struct_3d = struct.Struct("<3d")
