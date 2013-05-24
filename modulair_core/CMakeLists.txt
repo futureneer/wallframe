@@ -11,10 +11,25 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
 rosbuild_init()
 
-#set the default path for built executables to the "bin" directory
+### QT ###
+find_package(Qt4 REQUIRED)
+if(QT_FOUND)
+	set (QT_USE_QTWEBKIT TRUE)
+	set (QT_USE_QTOPENGL TRUE)
+	include(${QT_USE_FILE})
+	add_definitions(${QT_DEFINITIONS})
+	add_definitions(-DQT_NO_KEYWORDS)
+else(QT_FOUND)
+	message(FATAL: QT NOT FOUND)
+endif(QT_FOUND)
+
+## Set Paths
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+
+## MOC
+set(_moc ${CMAKE_CURRENT_BINARY_DIR}/${_current_MOC})
+
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()
@@ -22,6 +37,15 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_gensrv()
 
 #common commands for building c++ executables and libraries
+
+## QT Wrapping
+set(modulair_common_sources src/modulair_common.cpp)
+set(modulair_common_headers include/${PROJECT_NAME}/modulair_common.h)
+qt4_wrap_cpp(modulair_common_headers_moc ${modulair_common_headers})
+
+rosbuild_add_library(${PROJECT_NAME}	${modulair_common_headers}
+										${modulair_common_sources}
+										${modulair_common_headers_moc})
 
 rosbuild_add_library(${PROJECT_NAME} src/modulair_manager.cpp include/${PROJECT_NAME}/modulair_manager.h)
 
