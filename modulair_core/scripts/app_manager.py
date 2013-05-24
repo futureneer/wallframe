@@ -19,8 +19,9 @@ from modulair_msgs.msg import TrackerUser
 from modulair_msgs.msg import TrackerUserArray as tracker_msg
 
 class AppLaunchFile():
-  def __init__(self,name,launch_name,pack,path,active):
-    self.path_ = path
+  def __init__(self,name,launch_name,pack,launch_path,package_path,active):
+    self.launch_file_path_ = launch_path
+    self.package_path_ = package_path
     self.name_ = name
     self.launch_name_ = launch_name
     self.package_ = pack
@@ -48,13 +49,30 @@ class ModulairAppManager():
     rospy.spin()
     rospy.logwarn("ModulairAppManager: Cleaning up running applications")  
     self.shutdown_all_apps()
+    self.clean_up()
     rospy.logwarn("ModulairAppManager: Finished")
 
   def service_launch_app(self):
     pass
 
   def service_close_app(self):
+    pass 
+
+  def clean_up(self):
+    for app_id,app in self.apps_.items():
+      if rospy.has_param("/modulair/core/available_apps/" + app_id):
+        rospy.delete_param("/modulair/core/available_apps/" + app_id)
+        print("App parameters for [" + app_id + "] cleaned up")
     pass    
+
+  def shutdown_all_apps(self):
+    for app_id,app_process in self.active_app_launchers_.items():
+      app_process.terminate()
+      while app_process.poll() == None:
+        pass
+      if rospy.has_param("/modulair/core/apps/running/" + app_id):
+        rospy.delete_param("/modulair/core/apps/running/" + app_id)
+      rospy.logwarn("ModulairAppManager: App [" + app_id + "] shutdown successfully")
 
   def launch_app(self,app_name):
     if app_name in self.apps_in_manifest_:
@@ -76,23 +94,14 @@ class ModulairAppManager():
         self.apps_[full_app_name].active_ = True
 
         rospy.logwarn(message + " SUCCESS! File [" + launch_name + "]")
-        rospy.set_param("/modulair/apps/running/" + app_name, self.apps_[full_app_name])
+        rospy.set_param("/modulair/core/apps/running/" + app_name, [self.apps_[full_app_name]])
 
     else:
       rospy.logerr("ModulairAppManager: Requested app [" + app_name + "] not found in manifest.")
 
-  def shutdown_all_apps(self):
-    for app_id,app_process in self.active_app_launchers_.items():
-      app_process.terminate()
-      while app_process.poll() == None:
-        pass
-      if rospy.has_param("/modulair/apps/running/" + app_id):
-        rospy.delete_param("/modulair/apps/running/" + app_id)
-      rospy.logwarn("ModulairAppManager: App [" + app_id + "] shutdown successfully")
-
   def load_applications(self):
-    if rospy.has_param('/modulair/paths/application_path'):
-      self.app_path_ = rospy.get_param('/modulair/paths/application_path')
+    if rospy.has_param('/modulair/core/paths/application_path'):
+      self.app_path_ = rospy.get_param('/modulair/core/paths/application_path')
     else:
       rospy.logerr("ModulairAppManager: application path not found on parameter server")
     rospy.logwarn("ModulairAppManager: Loading Applications from [" + self.app_path_ + "]")
@@ -106,7 +115,16 @@ class ModulairAppManager():
           app_launch_package = split_path[len(split_path)-3]
         else:
           app_launch_package = split_path[len(split_path)-2]
-        A = AppLaunchFile(app_launch_name,app_launch_file,app_launch_package,app_full_path,False)
+
+        full_path_split = app_full_path.split('/')
+        if full_path_split[len(full_path_split)-2] == 'launch':
+          app_package_path = '/'.join(full_path_split[:len(full_path_split)-2])
+        else:
+          app_package_path = '/'.join(full_path_split[:len(full_path_split)-1])
+        rospy.set_param("/modulair/core/available_apps/" + app_launch_name, app_package_path)
+
+
+        A = AppLaunchFile(app_launch_name,app_launch_file,app_launch_package,app_full_path,app_package_path,False)
         self.apps_[app_launch_name] = A
 
         rospy.loginfo("ModulairAppManager: Found [" + app_launch_name + "]  in package  [" + app_launch_package + "]")
@@ -114,8 +132,8 @@ class ModulairAppManager():
     pass
 
   def load_application_manifest(self):
-    if rospy.has_param('/modulair/paths/app_manifest'):
-      self.app_manifest_ = rospy.get_param('/modulair/paths/app_manifest')
+    if rospy.has_param('/modulair/core/paths/app_manifest'):
+      self.app_manifest_ = rospy.get_param('/modulair/core/paths/app_manifest')
     else:
       rospy.logerr("ModulairAppManager: application manifest not found on parameter server")
     rospy.logwarn("ModulairAppManager: Loading Manifest")

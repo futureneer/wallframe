@@ -1,20 +1,22 @@
 <launch>
 
+  <group ns="/modulair/core">
   <node pkg="modulair_core" name="modulair_app_manager" type="app_manager.py" output="screen"/>
     <arg name="app_manifest_path" default="$(find modulair_core)/modulair_application_manifest.yaml" />
-    <param name="/modulair/paths/app_manifest" textfile="$(arg app_manifest_path)" />
-    <param name="/modulair/paths/application_path" value="/home/kel/modulair_applications" /> 
-  
+    <param name="paths/app_manifest" textfile="$(arg app_manifest_path)" />
+    <param name="paths/application_path" value="/home/kel/modulair_applications" /> 
+  </group>
 
   <rosparam>
     modulair:
-      params:
-        core:
+      core:
+        params:
           x: 1680
           y: 20
           width: 5760
           height: 3240
-        infobar:
+      infobar:
+        params:
           height_percentage: 20        
           icon_width: 5
           icon_spacer: 5
