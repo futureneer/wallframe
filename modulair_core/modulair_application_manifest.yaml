@@ -1,0 +1,17 @@
+################################################################################
+# MODULAIR APPLICATION MANIFEST
+################################################################################
+# Below is a list of application packages which will be available to the 
+# modulair framework.
+# 
+# These application packages should be located in the directory you set in the
+# 'application_path' param in the file modulair_core.launch
+#
+# Please use '#' to comment out unwanted applications
+################################################################################
+
+# modulair_app_unwanted_app
+modulair_app_python_example
+modulair_app_cpp_example
+modulair_app_openscenegraph_example
+modulair_app_image_storm

@@ -10,8 +10,7 @@
   <url>http://ros.org/wiki/modulair</url>
   <depend package="roscpp"/>
   <depend package="rospy"/>
-
-  <!-- MODULAIR APPLICATIONS-->
+  <depend package="modulair_msgs"/>
     
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmodulair"/>  
