@@ -125,6 +125,7 @@ class User():
       self.translation_timestamps_ = [[0.0,0.0,0.0]]*len(self.frame_names_)
       self.translations_merged_filtered_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
       self.translations_merged_filtered_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
+      self.translations_merged_filtered_body_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
       self.transforms_merged = [Transform()]*len(self.frame_names_)
       self.translations_merged_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
       self.merged_transform_exists_ = [False]*len(self.frame_names_)
@@ -173,9 +174,22 @@ class User():
         # TODO Fix filtering
         # self.translations_merged_filtered_[index] = t
         # self.translations_merged_filtered_mm_[index] = Vector3(t.x*1000,t.y*1000,t.z*1000)
+        self.translations_merged_filtered_[index] = Vector3( self.translations_merged_[index].x,
+                                                                self.translations_merged_[index].y,
+                                                                self.translations_merged_[index].z)
         self.translations_merged_filtered_mm_[index] = Vector3( self.translations_merged_[index].x*1000,
                                                                 self.translations_merged_[index].y*1000,
                                                                 self.translations_merged_[index].z*1000)
+      index += 1
+
+    ### Filter frames
+    index = 0
+    for frame_id in self.frame_names_:
+      if self.merged_transform_exists_[index] == True:
+        # Subtrackt torso location to normalize from body center
+        self.translations_merged_filtered_body_mm_[index] = Vector3(self.translations_merged_filtered_mm_[index].x - self.translations_merged_filtered_mm_[2].x, 
+                                                                    self.translations_merged_filtered_mm_[index].y - self.translations_merged_filtered_mm_[2].y, 
+                                                                    self.translations_merged_filtered_mm_[index].z - self.translations_merged_filtered_mm_[2].z)
       index += 1
 
     ### Broadcast Frames
@@ -183,7 +197,7 @@ class User():
     br = tf.TransformBroadcaster()
     for frame_id in self.frame_names_:
       if self.merged_transform_exists_[index] == True:
-        trans = self.translations_merged_filtered_mm_[index]
+        trans = self.translations_merged_filtered_[index]
         rot = tf.transformations.quaternion_from_euler(0, 0, 1)
         br.sendTransform((trans.x, trans.y, trans.z),
                          rot,
@@ -214,8 +228,8 @@ class User():
 
     self.get_transforms()
     self.merge_to_state_msg()
-    self.evaluate_state()
     self.evaluate_events()
+    self.evaluate_state()
     self.update_exists()
 
   def joint_by_name(self,name):
@@ -255,6 +269,12 @@ class User():
     else:
       return True
 
+  def joint_pos(self,j):
+    return self.translations_merged_filtered_mm_[self.joint_by_name(j)]
+  
+  def joint_body_pos(self,j):
+    return self.translations_merged_filtered_body_mm_[self.joint_by_name(j)]
+
   def not_zero(self,joint1,joint2):
     nz = True
     if joint1 == Vector3(0.0,0.0,0.0):
@@ -263,11 +283,7 @@ class User():
       nz = False
     return nz
 
-  def evaluate_state(self):
-    msg = user_event_msg()  
-    msg.user_id = self.mid_
-    msg.message = 'none'
-
+  def evaluate_events(self):
     # Hands Together
     if self.check_joint_dist(self.hand_limit_,'left_hand','right_hand'):
       self.current_state_msg.hands_together = True
@@ -293,12 +309,22 @@ class User():
     else:
       self.current_state_msg.left_elbow_click = False
 
+    # Right Hand Front 
+    if self.joint_body_pos('right_hand').y > self.joint_body_pos('left_hand').y:
+      self.current_state_msg.right_in_front = True
+      self.current_state_msg.left_in_front = False
+    else:
+      self.current_state_msg.right_in_front = False
+      self.current_state_msg.left_in_front = True
+
     # Workspace Limit
     self.current_state_msg.outside_workspace = self.check_outside_workspace()
+    pass
 
-
-    # Entered
-    # Left
+  def evaluate_state(self):
+    msg = user_event_msg()  
+    msg.user_id = self.mid_
+    msg.message = 'none'
 
     for case in switch(self.state__):
 
@@ -308,28 +334,23 @@ class User():
             msg.message = 'outside_workspace'
             self.state__ = 'OUTSIDE_WORKSPACE'
             break
+        # Hand Events
+        msg.event_id = 'hand_event'
         if self.current_state_msg.hands_on_head:
-            msg.event_id = 'hand_event'
             msg.message = 'hands_on_head'
             self.state__ = 'HANDS_HEAD'
             break
         if self.current_state_msg.hands_together:
-          msg.event_id = 'hand_event'
           msg.message = 'hands_together'
           self.state__ = 'HANDS_TOGETHER'
-          print "together"
           break
         if self.current_state_msg.right_elbow_click:
-          msg.event_id = 'hand_event'
           msg.message = 'right_elbow_click'
           self.state__ = 'RIGHT_ELBOW_CLICK'
-          print "click"
           break
         if self.current_state_msg.left_elbow_click:
-          msg.event_id = 'hand_event'
           msg.message = 'left_elbow_click'
           self.state__ = 'LEFT_ELBOW_CLICK'
-          print "click"
           break
         break
 
@@ -367,9 +388,6 @@ class User():
       self.user_event_pub_.publish(msg)
     pass
 
-  def evaluate_events(self):
-    pass
-
   def merge_to_state_msg(self):
     # Create Packet
     msg = user_msg()
@@ -381,6 +399,7 @@ class User():
     msg.translations_filtered = self.translations_merged_filtered_
     # TODO Fix Filtering
     msg.translations_mm = self.translations_merged_filtered_mm_
+    msg.translations_body_mm = self.translations_merged_filtered_body_mm_
     self.current_state_msg = msg
     pass
 
@@ -391,6 +410,7 @@ class UserManager():
     self.users_ = {}
     self.current_uid_ = 1
     self.active_trackers_ = []
+    self.no_users_ = True
 
     # ROS 
     rospy.init_node('modulair_user_manager',anonymous=True)
@@ -459,6 +479,16 @@ class UserManager():
       self.user_event_pub_.publish(msg)
 
       del self.users_[g]
+
+    if len(self.users_) == 0:
+      if self.no_users_ == False:
+        # Send all users left message
+        msg = user_event_msg()  
+        msg.user_id = g
+        msg.event_id = 'workspace_event'
+        msg.message = 'all_users_left'
+        self.user_event_pub_.publish(msg)
+        self.no_users_ = True
 
 
   def check_com(self,user_packet,user):
@@ -545,6 +575,7 @@ class UserManager():
           self.users_[u.mid_] = u
           rospy.set_param("modulair/user_data/"+str(u.mid_),self.users_[u.mid_].get_info())
           self.current_uid_ += 1
+          self.no_users_ = False
           add_new_user = False
     pass
 

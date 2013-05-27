@@ -7,7 +7,7 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class ModulairUserArray(roslib.message.Message):
-  _md5sum = "4461016f17f033881ce7d225b35ac131"
+  _md5sum = "efae75c0a0bbd4ee743c4a7e16947c4b"
   _type = "modulair_msgs/ModulairUserArray"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """# This message contains a vector of openni_msgs/User messages.
@@ -24,6 +24,7 @@ geometry_msgs/Transform[] transforms
 geometry_msgs/Vector3[] translations
 geometry_msgs/Vector3[] translations_filtered
 geometry_msgs/Vector3[] translations_mm
+geometry_msgs/Vector3[] translations_body_mm
 string workspace_state
 string focus_state
 bool leaving
@@ -32,6 +33,8 @@ bool hands_together
 bool hands_on_head
 bool right_elbow_click
 bool left_elbow_click
+bool right_in_front
+bool left_in_front
 bool outside_workspace
 
 ================================================================================
@@ -161,6 +164,11 @@ float64 w
         for val2 in val1.translations_mm:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        length = len(val1.translations_body_mm)
+        buff.write(_struct_I.pack(length))
+        for val2 in val1.translations_body_mm:
+          _x = val2
+          buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
         _x = val1.workspace_state
         length = len(_x)
         buff.write(struct.pack('<I%ss'%length, length, _x))
@@ -168,7 +176,7 @@ float64 w
         length = len(_x)
         buff.write(struct.pack('<I%ss'%length, length, _x))
         _x = val1
-        buff.write(_struct_7B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace))
+        buff.write(_struct_9B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace))
       _x = self.user_ids
       length = len(_x)
       # - if encoded as a list instead, serialize as bytes instead of string
@@ -277,6 +285,17 @@ float64 w
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
+        val1.translations_body_mm = []
+        for i in range(0, length):
+          val2 = geometry_msgs.msg.Vector3()
+          _x = val2
+          start = end
+          end += 24
+          (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+          val1.translations_body_mm.append(val2)
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
         start = end
         end += length
         val1.workspace_state = str[start:end]
@@ -288,14 +307,16 @@ float64 w
         val1.focus_state = str[start:end]
         _x = val1
         start = end
-        end += 7
-        (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace,) = _struct_7B.unpack(str[start:end])
+        end += 9
+        (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace,) = _struct_9B.unpack(str[start:end])
         val1.leaving = bool(val1.leaving)
         val1.joined = bool(val1.joined)
         val1.hands_together = bool(val1.hands_together)
         val1.hands_on_head = bool(val1.hands_on_head)
         val1.right_elbow_click = bool(val1.right_elbow_click)
         val1.left_elbow_click = bool(val1.left_elbow_click)
+        val1.right_in_front = bool(val1.right_in_front)
+        val1.left_in_front = bool(val1.left_in_front)
         val1.outside_workspace = bool(val1.outside_workspace)
         self.users.append(val1)
       start = end
@@ -362,6 +383,11 @@ float64 w
         for val2 in val1.translations_mm:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        length = len(val1.translations_body_mm)
+        buff.write(_struct_I.pack(length))
+        for val2 in val1.translations_body_mm:
+          _x = val2
+          buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
         _x = val1.workspace_state
         length = len(_x)
         buff.write(struct.pack('<I%ss'%length, length, _x))
@@ -369,7 +395,7 @@ float64 w
         length = len(_x)
         buff.write(struct.pack('<I%ss'%length, length, _x))
         _x = val1
-        buff.write(_struct_7B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace))
+        buff.write(_struct_9B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace))
       _x = self.user_ids
       length = len(_x)
       # - if encoded as a list instead, serialize as bytes instead of string
@@ -480,6 +506,17 @@ float64 w
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
+        val1.translations_body_mm = []
+        for i in range(0, length):
+          val2 = geometry_msgs.msg.Vector3()
+          _x = val2
+          start = end
+          end += 24
+          (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
+          val1.translations_body_mm.append(val2)
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
         start = end
         end += length
         val1.workspace_state = str[start:end]
@@ -491,14 +528,16 @@ float64 w
         val1.focus_state = str[start:end]
         _x = val1
         start = end
-        end += 7
-        (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace,) = _struct_7B.unpack(str[start:end])
+        end += 9
+        (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace,) = _struct_9B.unpack(str[start:end])
         val1.leaving = bool(val1.leaving)
         val1.joined = bool(val1.joined)
         val1.hands_together = bool(val1.hands_together)
         val1.hands_on_head = bool(val1.hands_on_head)
         val1.right_elbow_click = bool(val1.right_elbow_click)
         val1.left_elbow_click = bool(val1.left_elbow_click)
+        val1.right_in_front = bool(val1.right_in_front)
+        val1.left_in_front = bool(val1.left_in_front)
         val1.outside_workspace = bool(val1.outside_workspace)
         self.users.append(val1)
       start = end
@@ -516,7 +555,7 @@ float64 w
 
 _struct_I = roslib.message.struct_I
 _struct_B = struct.Struct("<B")
-_struct_7B = struct.Struct("<7B")
+_struct_9B = struct.Struct("<9B")
 _struct_4d = struct.Struct("<4d")
 _struct_2I = struct.Struct("<2I")
 _struct_3d = struct.Struct("<3d")

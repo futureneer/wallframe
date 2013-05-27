@@ -5,6 +5,7 @@ geometry_msgs/Transform[] transforms
 geometry_msgs/Vector3[] translations
 geometry_msgs/Vector3[] translations_filtered
 geometry_msgs/Vector3[] translations_mm
+geometry_msgs/Vector3[] translations_body_mm
 string workspace_state
 string focus_state
 bool leaving
@@ -13,4 +14,6 @@ bool hands_together
 bool hands_on_head
 bool right_elbow_click
 bool left_elbow_click
+bool right_in_front
+bool left_in_front
 bool outside_workspace
