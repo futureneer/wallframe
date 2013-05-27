@@ -1,5 +1,5 @@
 <package>
-  <description brief="modulair">
+  <description brief="modulair_core">
 
      A modular version of the Layered Application Interface for Research
 
@@ -7,13 +7,14 @@
   <author>Kelleher Guerin</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/modulair</url>
+  <url>http://ros.org/wiki/modulair_core</url>
   <depend package="roscpp"/>
   <depend package="rospy"/>
   <depend package="modulair_msgs"/>
+  <depend package="tf_conversions"/>
     
   <export>
-    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmodulair"/>  
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmodulair_core"/>  
   </export>
 
 </package>

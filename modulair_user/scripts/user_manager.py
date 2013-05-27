@@ -1,28 +1,51 @@
 #!/usr/bin/env python
+# ROS Imports
 import roslib; roslib.load_manifest('modulair_user')
 import rospy
 import tf
-
+# ROS Messages
 from geometry_msgs.msg import Transform
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Bool
 from std_msgs.msg import String
-
+# Modulair Imports
 from modulair_msgs.msg import ModulairUser as user_msg
 from modulair_msgs.msg import ModulairUserArray as user_array_msg
 from modulair_msgs.msg import ModulairUserEvent as user_event_msg
 from modulair_msgs.msg import TrackerUser
 from modulair_msgs.msg import TrackerUserArray as tracker_msg
-
+# Helper functions and classes (local)
 from OneEuroFilter import OneEuroFilter
+from Switch import switch
 
 from math import sqrt, pow
 import itertools
-from itertools import izip 
+from itertools import izip
+
+# for reference frame IDs:
+# 0["head"]
+# 1["neck"]
+# 2["torso"]
+# 3["right_shoulder"]
+# 4["left_shoulder"]
+# 5["right_elbow"]
+# 6["left_elbow"]
+# 7["right_hand"]
+# 8["left_hand"]
+# 9["right_hip"]
+# 10["left_hip"]
+# 11["right_knee"]
+# 12["left_knee"]
+# 13["right_foot"]
+# 14["left_foot"]
 
 class User():
-  def __init__(self,uid,base_frame,tf_listener,filter_freq,filter_mincutoff,filter_beta,filter_dcutoff):
+  def __init__(self,uid,tf_listener,user_event_pub):
+    # Init from constructor
     self.mid_ = uid
+    self.listener_ = tf_listener
+    self.user_event_pub_ = user_event_pub
+    # Initial Structures    
     self.exists_in_tracker = {}
     self.frame_names_ = []
     self.tracker_uids_ = {}
@@ -37,15 +60,20 @@ class User():
     self.current_state_msg = user_msg()
     self.is_active_ = False
     self.is_primary_ = False
-    self.refresh_ = 0.0
     self.exists_ = False
-    self.base_frame_ = base_frame
-    self.listener_ = tf_listener
     self.init_filters_ = False
-    self.filter_freq_ = filter_freq
-    self.filter_mincutoff_ = filter_mincutoff
-    self.filter_beta_ = filter_beta
-    self.filter_dcutoff_ = filter_dcutoff
+    # State
+    self.state__ = "IDLE"
+    # Prameters from parameter server
+    self.hand_limit_        = rospy.get_param('/modulair/user/hand_limit') 
+    self.head_limit_        = rospy.get_param('/modulair/user/head_limit')  
+    self.elbow_limit_       = rospy.get_param('/modulair/user/elbow_limit')    
+    self.base_frame_        = rospy.get_param('/modulair/user/base_frame','wall_frame')
+    self.filter_mincutoff_  = rospy.get_param('/modulair/user/filter_mincutoff',1.0)
+    self.filter_beta_       = rospy.get_param('/modulair/user/filter_beta',0.1)    
+    self.filter_dcutoff_    = rospy.get_param('/modulair/user/filter_dcutoff',1.0) 
+    self.run_frequency_     = rospy.get_param('/modulair/user/run_frequency',1.0)   
+    self.workspace_limits_  = rospy.get_param('/modulair/user/workspace_limits')
 
   def get_transforms(self):
     self.transforms_.clear()
@@ -91,9 +119,9 @@ class User():
 
     ### Initialize filters if not already done
     if self.init_filters_ == False:
-      self.translation_filters_ = [[OneEuroFilter(self.filter_freq_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
-                        OneEuroFilter(self.filter_freq_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
-                        OneEuroFilter(self.filter_freq_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_)]]*len(self.frame_names_)
+      self.translation_filters_ = [[OneEuroFilter(self.run_frequency_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
+                        OneEuroFilter(self.run_frequency_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
+                        OneEuroFilter(self.run_frequency_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_)]]*len(self.frame_names_)
       self.translation_timestamps_ = [[0.0,0.0,0.0]]*len(self.frame_names_)
       self.translations_merged_filtered_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
       self.translations_merged_filtered_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
@@ -135,23 +163,34 @@ class User():
     for translation, timestamp in izip(self.translations_merged_, self.translation_timestamps_):
       if self.merged_transform_exists_[index] == True:
         t = Vector3()
-        # print translation
         t.x = self.translation_filters_[index][0](translation.x, timestamp[0])
-        timestamp[0] += 1.0/self.filter_freq_
+        timestamp[0] += 1.0/self.run_frequency_
         t.y = self.translation_filters_[index][1](translation.y, timestamp[1])
-        timestamp[1] += 1.0/self.filter_freq_
+        timestamp[1] += 1.0/self.run_frequency_
         t.z = self.translation_filters_[index][2](translation.z, timestamp[2])
-        timestamp[2] += 1.0/self.filter_freq_
+        timestamp[2] += 1.0/self.run_frequency_
 
-        self.translations_merged_filtered_[index] = t
-        self.translations_merged_filtered_mm_[index] = Vector3(t.x*1000,t.y*1000,t.z*1000)
-
+        # TODO Fix filtering
+        # self.translations_merged_filtered_[index] = t
+        # self.translations_merged_filtered_mm_[index] = Vector3(t.x*1000,t.y*1000,t.z*1000)
+        self.translations_merged_filtered_mm_[index] = Vector3( self.translations_merged_[index].x*1000,
+                                                                self.translations_merged_[index].y*1000,
+                                                                self.translations_merged_[index].z*1000)
       index += 1
 
-
-    pass
-
-  def filter_transforms(self):
+    ### Broadcast Frames
+    index = 0
+    br = tf.TransformBroadcaster()
+    for frame_id in self.frame_names_:
+      if self.merged_transform_exists_[index] == True:
+        trans = self.translations_merged_filtered_mm_[index]
+        rot = tf.transformations.quaternion_from_euler(0, 0, 1)
+        br.sendTransform((trans.x, trans.y, trans.z),
+                         rot,
+                         rospy.Time.now(),
+                         "user_"+str(self.mid_)+"_"+self.frame_names_[index]+"_merged",
+                         self.base_frame_)
+      index += 1
 
     pass
 
@@ -179,7 +218,153 @@ class User():
     self.evaluate_events()
     self.update_exists()
 
+  def joint_by_name(self,name):
+    return self.frame_names_.index(name)
+
+  def joint_dist(self,joint1,joint2):
+
+    j1 = self.translations_merged_filtered_mm_[self.joint_by_name(joint1)]
+    j2 = self.translations_merged_filtered_mm_[self.joint_by_name(joint2)]
+
+    if self.not_zero(j1,j2) == False:
+      return -1
+    dist = sqrt(pow(j1.x-j2.x , 2) +
+                    pow(j1.y-j2.y , 2) +
+                    pow(j1.z-j2.z , 2) )
+    return dist
+
+  def check_joint_dist(self,thresh,joint1,joint2):
+    dist = self.joint_dist(joint1,joint2)
+    if dist == -1:
+      return False
+    # print joint1 +" - "+str(dist)
+    if dist > thresh:
+      return False
+    else:
+      return True
+
+  def check_outside_workspace(self):
+    torso = self.translations_merged_filtered_mm_[self.joint_by_name('torso')]
+    if all( [ torso.x > self.workspace_limits_[0],
+              torso.x < self.workspace_limits_[1],
+              torso.y > self.workspace_limits_[2],
+              torso.y < self.workspace_limits_[3],
+              torso.z > self.workspace_limits_[4],
+              torso.z < self.workspace_limits_[5], ] ):
+      return False
+    else:
+      return True
+
+  def not_zero(self,joint1,joint2):
+    nz = True
+    if joint1 == Vector3(0.0,0.0,0.0):
+      nz = False
+    if joint2 == Vector3(0.0,0.0,0.0):
+      nz = False
+    return nz
+
   def evaluate_state(self):
+    msg = user_event_msg()  
+    msg.user_id = self.mid_
+    msg.message = 'none'
+
+    # Hands Together
+    if self.check_joint_dist(self.hand_limit_,'left_hand','right_hand'):
+      self.current_state_msg.hands_together = True
+    else:
+      self.current_state_msg.hands_together = False
+
+    # Hands on Head
+    if all( [self.check_joint_dist(self.head_limit_,'right_hand','head'),
+                self.check_joint_dist(self.head_limit_,'left_hand','head')] ):
+      self.current_state_msg.hands_on_head = True
+    else:
+      self.current_state_msg.hands_on_head = False
+
+    # Right Elbow Click
+    if self.check_joint_dist(self.hand_limit_,'left_hand','right_elbow'):
+      self.current_state_msg.right_elbow_click = True
+    else:
+      self.current_state_msg.right_elbow_click = False
+
+    # Left Elbow Click
+    if self.check_joint_dist(self.hand_limit_,'right_hand','left_elbow'):
+      self.current_state_msg.left_elbow_click = True
+    else:
+      self.current_state_msg.left_elbow_click = False
+
+    # Workspace Limit
+    self.current_state_msg.outside_workspace = self.check_outside_workspace()
+
+
+    # Entered
+    # Left
+
+    for case in switch(self.state__):
+
+      if case('IDLE'):
+        if self.current_state_msg.outside_workspace:
+            msg.event_id = 'workspace_event'
+            msg.message = 'outside_workspace'
+            self.state__ = 'OUTSIDE_WORKSPACE'
+            break
+        if self.current_state_msg.hands_on_head:
+            msg.event_id = 'hand_event'
+            msg.message = 'hands_on_head'
+            self.state__ = 'HANDS_HEAD'
+            break
+        if self.current_state_msg.hands_together:
+          msg.event_id = 'hand_event'
+          msg.message = 'hands_together'
+          self.state__ = 'HANDS_TOGETHER'
+          print "together"
+          break
+        if self.current_state_msg.right_elbow_click:
+          msg.event_id = 'hand_event'
+          msg.message = 'right_elbow_click'
+          self.state__ = 'RIGHT_ELBOW_CLICK'
+          print "click"
+          break
+        if self.current_state_msg.left_elbow_click:
+          msg.event_id = 'hand_event'
+          msg.message = 'left_elbow_click'
+          self.state__ = 'LEFT_ELBOW_CLICK'
+          print "click"
+          break
+        break
+
+      if case('OUTSIDE_WORKSPACE'):
+        if not self.current_state_msg.outside_workspace:
+          self.state__ = 'IDLE'
+        break
+
+      if case('HANDS_TOGETHER'):
+        if not self.current_state_msg.hands_together:
+          self.state__ = 'IDLE'
+        break
+
+      if case('HANDS_HEAD'):
+        if not self.check_joint_dist(self.head_limit_,'left_hand','head'):
+          self.state__ = 'IDLE'
+          break
+        elif not self.check_joint_dist(self.head_limit_,'right_hand','head'):
+          self.state__ = 'IDLE'
+          break
+        break
+
+      if case('RIGHT_ELBOW_CLICK'):
+        if not self.current_state_msg.right_elbow_click:
+          self.state__ = 'IDLE'
+        break
+
+      if case('LEFT_ELBOW_CLICK'):
+        if not self.current_state_msg.left_elbow_click:
+          self.state__ = 'IDLE'
+        break
+
+    # Check for populated message and publish
+    if 'none' not in msg.message:
+      self.user_event_pub_.publish(msg)
     pass
 
   def evaluate_events(self):
@@ -194,6 +379,7 @@ class User():
     msg.transforms = self.transforms_merged_
     msg.translations = self.translations_merged_
     msg.translations_filtered = self.translations_merged_filtered_
+    # TODO Fix Filtering
     msg.translations_mm = self.translations_merged_filtered_mm_
     self.current_state_msg = msg
     pass
@@ -203,28 +389,28 @@ class UserManager():
   def __init__(self):
     # Members
     self.users_ = {}
-    self.current_uid = 1
+    self.current_uid_ = 1
     self.active_trackers_ = []
 
     # ROS 
     rospy.init_node('modulair_user_manager',anonymous=True)
     self.time_ = rospy.get_time()
     # ROS Params
-    self.com_dist_thresh_   = rospy.get_param('modulair/user/center_distance_threshold',100) # default is 100 mm
-    self.base_frame_        = rospy.get_param('modulair/user/base_frame','wall_frame')
-    self.filter_mincutoff_  = rospy.get_param('modulair/user/filter_mincutoff',1.0)
-    self.filter_beta_       = rospy.get_param('modulair/user/filter_beta',0.1)    
-    self.filter_dcutoff_    = rospy.get_param('modulair/user/filter_dcutoff',1.0) 
-    self.run_frequency_    = rospy.get_param('modulair/user/run_frequency',1.0)    
+    self.com_dist_thresh_   = rospy.get_param('/modulair/user/center_distance_threshold',100) # default is 100 mm
+    self.run_frequency_    = rospy.get_param('/modulair/user/run_frequency',30.0)   
+
     # Publishers
     self.user_state_pub_ = rospy.Publisher("/modulair/users/state",user_array_msg)
     self.user_event_pub_ = rospy.Publisher("/modulair/users/events",user_event_msg)
+    self.modulair_event_pub = rospy.Publisher("/modulair/events",String)
+    self.toast_pub_ = rospy.Publisher("/modulair/info/toast",String)
+    self.toast_pub_ = rospy.Publisher("/modulair/info/debug",String)
     # Subscriber
     self.tracker_sub = rospy.Subscriber("/modulair/tracker/users",tracker_msg,self.tracker_cb)
     # TF Listener
     self.tf_listener_ = tf.TransformListener()
 
-    rospy.logwarn('Modulair UserManager: Started')
+    rospy.logwarn('ModulairUserManager: Started')
 
     while not rospy.is_shutdown():
       # self.time_ = rospy.get_time()
@@ -238,7 +424,7 @@ class UserManager():
       rospy.sleep(1.0/self.run_frequency_) # for 30 hz operation
 
     # Finish
-    rospy.logwarn('Modulair UserManager: Finished')
+    rospy.logwarn('ModulairUserManager: Finished')
 
   def publish_user_state(self):
     state_packet = user_array_msg()
@@ -265,6 +451,13 @@ class UserManager():
       if rospy.has_param("modulair/user_data/"+str(g)):
         rospy.delete_param("modulair/user_data/"+str(g))
       rospy.logwarn("User [modulair UID: " + str(g) + "] lost, removing from list")
+      
+      msg = user_event_msg()  
+      msg.user_id = g
+      msg.event_id = 'workspace_event'
+      msg.message = 'user_left'
+      self.user_event_pub_.publish(msg)
+
       del self.users_[g]
 
 
@@ -272,11 +465,11 @@ class UserManager():
     packet_com = user_packet.center_of_mass
     user_com = user.state_.center_of_mass
 
-    dist_sum = sqrt(pow(packet_com.x-user_com.x , 2) +
+    dist = sqrt(pow(packet_com.x-user_com.x , 2) +
                     pow(packet_com.y-user_com.y , 2) +
                     pow(packet_com.z-user_com.z , 2) )
 
-    if dist_sum < self.com_dist_thresh_:
+    if dist < self.com_dist_thresh_:
       return True
     else:
       return False
@@ -334,21 +527,24 @@ class UserManager():
         if user_packet.center_of_mass == Vector3(0.0,0.0,0.0):
           pass
         else:
-          u = User( self.current_uid,
-                    self.base_frame_,
+          u = User( self.current_uid_,
                     self.tf_listener_,
-                    self.run_frequency_,
-                    self.filter_mincutoff_,
-                    self.filter_beta_,
-                    self.filter_dcutoff_)
+                    self.user_event_pub_)
           u.tracker_uids_[user_packet.tracker_id] = user_packet.uid
           u.tracker_packets_[user_packet.tracker_id] = user_packet
           u.exists_in_tracker[user_packet.tracker_id] = True
           u.exists_ = True
-          rospy.logwarn("Adding user: [tracker ID: " + str(user_packet.uid) + "], [modulair ID: " + str(self.current_uid) + "]")
+
+          msg = user_event_msg()  
+          msg.user_id = self.current_uid_
+          msg.event_id = 'workspace_event'
+          msg.message = 'user_entered'
+          self.user_event_pub_.publish(msg)
+
+          rospy.logwarn("Adding user: [tracker ID: " + str(user_packet.uid) + "], [modulair ID: " + str(self.current_uid_) + "]")
           self.users_[u.mid_] = u
           rospy.set_param("modulair/user_data/"+str(u.mid_),self.users_[u.mid_].get_info())
-          self.current_uid += 1
+          self.current_uid_ += 1
           add_new_user = False
     pass
 

@@ -38,19 +38,24 @@ class ModulairAppManager():
     # ROS Init
     rospy.init_node('modulair_app_manager',anonymous=True)
 
+    self.modulair_event_sub = rospy.Subscriber("/modulair/events", String, self.modulair_event_cb)
+
     rospy.logwarn("ModulairAppManager: Started")    
 
     self.load_application_manifest()
     self.load_applications()
     print ''
     print ''
-    self.launch_app("python_example")
+    self.launch_app("cpp_example")
 
     rospy.spin()
     rospy.logwarn("ModulairAppManager: Cleaning up running applications")  
     self.shutdown_all_apps()
     self.clean_up()
     rospy.logwarn("ModulairAppManager: Finished")
+
+  def modulair_event_cb(self):
+    pass
 
   def service_launch_app(self):
     pass

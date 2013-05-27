@@ -30,28 +30,14 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 ## MOC
 set(_moc ${CMAKE_CURRENT_BINARY_DIR}/${_current_MOC})
 
-
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-
-#common commands for building c++ executables and libraries
-
 ## QT Wrapping
-set(modulair_common_sources src/modulair_common.cpp)
-set(modulair_common_headers include/${PROJECT_NAME}/modulair_common.h)
-qt4_wrap_cpp(modulair_common_headers_moc ${modulair_common_headers})
+set(modulair_core_sources src/modulair_app_base.cpp)
+set(modulair_core_headers   include/${PROJECT_NAME}/modulair_app_base.h
+							include/${PROJECT_NAME}/modulair_core.h)
 
-rosbuild_add_library(${PROJECT_NAME}	${modulair_common_headers}
-										${modulair_common_sources}
-										${modulair_common_headers_moc})
+qt4_wrap_cpp(modulair_core_headers_moc ${modulair_core_headers})
 
-rosbuild_add_library(${PROJECT_NAME} src/modulair_manager.cpp include/${PROJECT_NAME}/modulair_manager.h)
-
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-
-rosbuild_add_executable(modulair_main src/modulair_main.cpp)
-target_link_libraries(modulair_main ${PROJECT_NAME})
+# Create MODULAIR_CORE library (libmodulair_core)
+rosbuild_add_library(${PROJECT_NAME}	${modulair_core_headers}
+										${modulair_core_sources}
+										${modulair_core_headers_moc})

@@ -6,8 +6,12 @@
         base_frame: wall_frame
         center_distance_threshold: 100
         filter_mincutoff: 1.0
-        filter_beta: 1.0
+        filter_beta: 0.0
         filter_dcutoff: 1.0
         run_frequency: 30.0
+        workspace_limits: [-1200,1200,-3000,3000,1500,3000]
+        hand_limit: 100
+        head_limit: 220
+        elbow_limit: 100
   </rosparam>
 </launch>

@@ -7,7 +7,7 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class ModulairUserArray(roslib.message.Message):
-  _md5sum = "8f1f6815df3078e4954c54834a857c45"
+  _md5sum = "4461016f17f033881ce7d225b35ac131"
   _type = "modulair_msgs/ModulairUserArray"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """# This message contains a vector of openni_msgs/User messages.
@@ -24,6 +24,15 @@ geometry_msgs/Transform[] transforms
 geometry_msgs/Vector3[] translations
 geometry_msgs/Vector3[] translations_filtered
 geometry_msgs/Vector3[] translations_mm
+string workspace_state
+string focus_state
+bool leaving
+bool joined
+bool hands_together
+bool hands_on_head
+bool right_elbow_click
+bool left_elbow_click
+bool outside_workspace
 
 ================================================================================
 MSG: std_msgs/Header
@@ -152,6 +161,14 @@ float64 w
         for val2 in val1.translations_mm:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        _x = val1.workspace_state
+        length = len(_x)
+        buff.write(struct.pack('<I%ss'%length, length, _x))
+        _x = val1.focus_state
+        length = len(_x)
+        buff.write(struct.pack('<I%ss'%length, length, _x))
+        _x = val1
+        buff.write(_struct_7B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace))
       _x = self.user_ids
       length = len(_x)
       # - if encoded as a list instead, serialize as bytes instead of string
@@ -257,6 +274,29 @@ float64 w
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
           val1.translations_mm.append(val2)
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
+        start = end
+        end += length
+        val1.workspace_state = str[start:end]
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
+        start = end
+        end += length
+        val1.focus_state = str[start:end]
+        _x = val1
+        start = end
+        end += 7
+        (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace,) = _struct_7B.unpack(str[start:end])
+        val1.leaving = bool(val1.leaving)
+        val1.joined = bool(val1.joined)
+        val1.hands_together = bool(val1.hands_together)
+        val1.hands_on_head = bool(val1.hands_on_head)
+        val1.right_elbow_click = bool(val1.right_elbow_click)
+        val1.left_elbow_click = bool(val1.left_elbow_click)
+        val1.outside_workspace = bool(val1.outside_workspace)
         self.users.append(val1)
       start = end
       end += 4
@@ -322,6 +362,14 @@ float64 w
         for val2 in val1.translations_mm:
           _x = val2
           buff.write(_struct_3d.pack(_x.x, _x.y, _x.z))
+        _x = val1.workspace_state
+        length = len(_x)
+        buff.write(struct.pack('<I%ss'%length, length, _x))
+        _x = val1.focus_state
+        length = len(_x)
+        buff.write(struct.pack('<I%ss'%length, length, _x))
+        _x = val1
+        buff.write(_struct_7B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace))
       _x = self.user_ids
       length = len(_x)
       # - if encoded as a list instead, serialize as bytes instead of string
@@ -429,6 +477,29 @@ float64 w
           end += 24
           (_x.x, _x.y, _x.z,) = _struct_3d.unpack(str[start:end])
           val1.translations_mm.append(val2)
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
+        start = end
+        end += length
+        val1.workspace_state = str[start:end]
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
+        start = end
+        end += length
+        val1.focus_state = str[start:end]
+        _x = val1
+        start = end
+        end += 7
+        (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.outside_workspace,) = _struct_7B.unpack(str[start:end])
+        val1.leaving = bool(val1.leaving)
+        val1.joined = bool(val1.joined)
+        val1.hands_together = bool(val1.hands_together)
+        val1.hands_on_head = bool(val1.hands_on_head)
+        val1.right_elbow_click = bool(val1.right_elbow_click)
+        val1.left_elbow_click = bool(val1.left_elbow_click)
+        val1.outside_workspace = bool(val1.outside_workspace)
         self.users.append(val1)
       start = end
       end += 4
@@ -444,7 +515,8 @@ float64 w
       raise roslib.message.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = roslib.message.struct_I
-_struct_4d = struct.Struct("<4d")
 _struct_B = struct.Struct("<B")
+_struct_7B = struct.Struct("<7B")
+_struct_4d = struct.Struct("<4d")
 _struct_2I = struct.Struct("<2I")
 _struct_3d = struct.Struct("<3d")
