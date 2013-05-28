@@ -182,7 +182,7 @@ class User():
                                                                 self.translations_merged_[index].z*1000)
       index += 1
 
-    ### Filter frames
+    ### Body frames
     index = 0
     for frame_id in self.frame_names_:
       if self.merged_transform_exists_[index] == True:

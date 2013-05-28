@@ -32,6 +32,8 @@ namespace modulair{
     virtual bool build() = 0;
     virtual bool start() = 0;
     virtual bool stop() = 0;
+    virtual bool pause() = 0;
+    virtual bool resume() = 0;
 
 
   public Q_SLOTS:

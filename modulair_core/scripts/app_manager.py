@@ -46,7 +46,8 @@ class ModulairAppManager():
     self.load_applications()
     print ''
     print ''
-    self.launch_app("cpp_example")
+    # self.launch_app("cpp_example")
+    self.launch_app("image_storm")
 
     rospy.spin()
     rospy.logwarn("ModulairAppManager: Cleaning up running applications")  
