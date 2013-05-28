@@ -18,6 +18,9 @@ from modulair_msgs.msg import ModulairUserEvent as user_event_msg
 from modulair_msgs.msg import TrackerUser
 from modulair_msgs.msg import TrackerUserArray as tracker_msg
 
+import modulair_core
+from modulair_core.srv import *
+
 class AppLaunchFile():
   def __init__(self,name,launch_name,pack,launch_path,package_path,active):
     self.launch_file_path_ = launch_path
@@ -37,32 +40,65 @@ class ModulairAppManager():
     self.roslaunch_master_ = ROSLaunch()
     # ROS Init
     rospy.init_node('modulair_app_manager',anonymous=True)
-
+    # ROS Subscribers
     self.modulair_event_sub = rospy.Subscriber("/modulair/events", String, self.modulair_event_cb)
-
-    rospy.logwarn("ModulairAppManager: Started")    
-
+    
+    # Load Apps
     self.load_application_manifest()
     self.load_applications()
-    print ''
-    print ''
-    # self.launch_app("cpp_example")
-    self.launch_app("image_storm")
 
+    # ROS Services
+    print''
+    self.load_app_srv_ = rospy.Service('app_manager/load_app', modulair_core.srv.load_app, self.load_app_service)
+    rospy.logwarn("ModulairAppManager: Service Ready [ load_app ]")
+    self.close_app_srv_ = rospy.Service('app_manager/close_app', modulair_core.srv.close_app, self.close_app_service)
+    rospy.logwarn("ModulairAppManager: Service Ready [ close_app ]")
+    self.close_all_apps_srv_ = rospy.Service('app_manager/close_all_apps', modulair_core.srv.close_all_apps, self.close_all_apps_service)
+    rospy.logwarn("ModulairAppManager: Service Ready [ close_all_apps ]")
+    
+    # Running
+    rospy.logwarn("ModulairAppManager: Started")  
     rospy.spin()
+    
+    # Quitting
     rospy.logwarn("ModulairAppManager: Cleaning up running applications")  
     self.shutdown_all_apps()
     self.clean_up()
     rospy.logwarn("ModulairAppManager: Finished")
+  
+  def load_app_service(self,req):
+    message = "ModulairAppManager: Service Call to LOAD APP ["+req.app_name+"]"
+    if self.launch_app(req.app_name) == True:
+      return "LOAD APP -- SUCCESS"
+    else:
+      return "LOAD APP -- FAILED -- App not found or could not load"
+    pass
+
+  def close_app_service(self,req):
+    message = "ModulairAppManager: Service Call to CLOSE APP ["+req.app_name+"]"
+    app_full_name = "modulair_app_"+req.app_name
+    if app_full_name in self.active_app_launchers_.keys():
+      rospy.logwarn(message + "SUCCESS")
+      self.shutdown_app(req.app_name)
+      return "CLOSE APP -- SUCCESS"
+    else:
+      rospy.logwarn(message + "FAILED -- App not running")
+      return "CLOSE APP -- FAIL -- App not running"
+    pass
+
+  def close_all_apps_service(self,req):
+    message = "ModulairAppManager: Service Call to CLOSE ALL APPS -- "
+    if len(self.active_app_launchers_) == 0:
+      rospy.logwarn(message + "FAILED -- No apps are running")
+      return "CLOSE ALL APPS -- FAIL -- No apps are running" 
+    else:
+      self.shutdown_all_apps()
+      rospy.logwarn(message + "SUCCESS")
+      return "CLOSE ALL APPS -- SUCCESS"
+    pass
 
   def modulair_event_cb(self):
     pass
-
-  def service_launch_app(self):
-    pass
-
-  def service_close_app(self):
-    pass 
 
   def clean_up(self):
     for app_id,app in self.apps_.items():
@@ -72,13 +108,25 @@ class ModulairAppManager():
     pass    
 
   def shutdown_all_apps(self):
-    for app_id,app_process in self.active_app_launchers_.items():
+    for full_app_name,app_process in self.active_app_launchers_.items():
       app_process.terminate()
       while app_process.poll() == None:
         pass
-      if rospy.has_param("/modulair/core/apps/running/" + app_id):
-        rospy.delete_param("/modulair/core/apps/running/" + app_id)
-      rospy.logwarn("ModulairAppManager: App [" + app_id + "] shutdown successfully")
+      if rospy.has_param("/modulair/core/apps/running/" + full_app_name):
+        rospy.delete_param("/modulair/core/apps/running/" + full_app_name)
+      rospy.logwarn("ModulairAppManager: App [" + full_app_name + "] shutdown successfully")
+    self.active_app_launchers_.clear()
+
+  def shutdown_app(self,app_name):
+    full_app_name = "modulair_app_" + app_name
+    app_process  = self.active_app_launchers_[full_app_name]
+    app_process.terminate()
+    while app_process.poll() == None:
+      pass
+    if rospy.has_param("/modulair/core/apps/running/" + full_app_name):
+      rospy.delete_param("/modulair/core/apps/running/" + full_app_name)
+    del self.active_app_launchers_[full_app_name]
+    rospy.logwarn("ModulairAppManager: App [" + full_app_name + "] shutdown successfully")
 
   def launch_app(self,app_name):
     if app_name in self.apps_in_manifest_:
@@ -87,6 +135,7 @@ class ModulairAppManager():
 
       if full_app_name not in self.apps_.keys():
         rospy.logerr(message + " FAILED! File [" + full_app_name + "] not found in path")
+        return False
       else:
         app_name = self.apps_[full_app_name].name_
         launch_name = self.apps_[full_app_name].launch_name_
@@ -101,6 +150,7 @@ class ModulairAppManager():
 
         rospy.logwarn(message + " SUCCESS! File [" + launch_name + "]")
         rospy.set_param("/modulair/core/apps/running/" + app_name, [self.apps_[full_app_name]])
+        return True
 
     else:
       rospy.logerr("ModulairAppManager: Requested app [" + app_name + "] not found in manifest.")

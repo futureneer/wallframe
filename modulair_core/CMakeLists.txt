@@ -23,6 +23,9 @@ else(QT_FOUND)
 	message(FATAL: QT NOT FOUND)
 endif(QT_FOUND)
 
+#uncomment if you have defined services
+rosbuild_gensrv()
+
 ## Set Paths
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
