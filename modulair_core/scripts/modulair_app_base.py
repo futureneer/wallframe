@@ -35,7 +35,8 @@ class ContainerWidget(QWidget):
   # @QtCore.Slot(bool)
   def check_ok(self):
     if rospy.is_shutdown():
-      self.app_.quit()
+      self.app_.exit()
+
 
 class ModulairAppBase():
   def __init__(self):
@@ -74,6 +75,7 @@ class ModulairAppBase():
     app = QApplication(sys.argv)
 
     self.container_ = ContainerWidget('container',app)
+    self.container_.setWindowFlags(QtCore.Qt.FramelessWindowHint)
     self.container_.resize(self.width_, self.height_)
     self.container_.move(self.x_,self.y_)
     self.container_.setWindowTitle('Simple')
@@ -81,14 +83,14 @@ class ModulairAppBase():
 
     # Running
     rospy.logwarn("ModulairPythonApp: Started")  
-    sys.exit(app.exec_())
-    
+    # sys.exit(app.exec_())
+    app.exec_()
     # Quitting
-    rospy.logwarn("ModulairPythonApp: Cleaning up")  
     self.clean_up()
     rospy.logwarn("ModulairPythonApp: Finished")
   
   def clean_up(self):
+    rospy.logwarn("ModulairPythonApp: Cleaning up")  
     pass    
 
   def user_state_cb(self,msg):
