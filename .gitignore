@@ -4,4 +4,7 @@ bin
 build
 lib
 msg_gen
+.ropeproject
 *.pyc
+*#
+*~
