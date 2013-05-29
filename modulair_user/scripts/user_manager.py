@@ -571,6 +571,12 @@ class UserManager():
         if user_packet.center_of_mass == Vector3(0.0,0.0,0.0):
           pass
         else:
+          # Increment the user id to assign if that id is already taken
+          while self.current_uid_ in self.users_.keys():
+            self.current_uid_ += 1
+            if self.current_uid_ > 6:
+              self.current_uid_ = 0
+
           u = User( self.current_uid_,
                     self.tf_listener_,
                     self.user_event_pub_)
@@ -589,6 +595,8 @@ class UserManager():
           self.users_[u.mid_] = u
           rospy.set_param("modulair/user_data/"+str(u.mid_),self.users_[u.mid_].get_info())
           self.current_uid_ += 1
+          if self.current_uid_ > 6:
+            self.current_uid_ = 0
           self.no_users_ = False
           add_new_user = False
     pass
