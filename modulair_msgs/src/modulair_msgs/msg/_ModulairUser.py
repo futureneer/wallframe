@@ -6,7 +6,7 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class ModulairUser(roslib.message.Message):
-  _md5sum = "9d225b56a828def914e76c6c82a21f0e"
+  _md5sum = "887b5db37f9703dd92d8a17834614b25"
   _type = "modulair_msgs/ModulairUser"
   _has_header = True #flag to mark the presence of a Header object
   _full_text = """Header header
@@ -18,7 +18,7 @@ geometry_msgs/Vector3[] translations_filtered
 geometry_msgs/Vector3[] translations_mm
 geometry_msgs/Vector3[] translations_body_mm
 string workspace_state
-string focus_state
+bool focused
 bool leaving
 bool joined
 bool hands_together
@@ -71,8 +71,8 @@ float64 z
 float64 w
 
 """
-  __slots__ = ['header','modulair_id','frame_names','transforms','translations','translations_filtered','translations_mm','translations_body_mm','workspace_state','focus_state','leaving','joined','hands_together','hands_on_head','right_elbow_click','left_elbow_click','right_in_front','left_in_front','outside_workspace']
-  _slot_types = ['Header','uint8','string[]','geometry_msgs/Transform[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]','string','string','bool','bool','bool','bool','bool','bool','bool','bool','bool']
+  __slots__ = ['header','modulair_id','frame_names','transforms','translations','translations_filtered','translations_mm','translations_body_mm','workspace_state','focused','leaving','joined','hands_together','hands_on_head','right_elbow_click','left_elbow_click','right_in_front','left_in_front','outside_workspace']
+  _slot_types = ['Header','uint8','string[]','geometry_msgs/Transform[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]','geometry_msgs/Vector3[]','string','bool','bool','bool','bool','bool','bool','bool','bool','bool','bool']
 
   def __init__(self, *args, **kwds):
     """
@@ -82,7 +82,7 @@ float64 w
     changes.  You cannot mix in-order arguments and keyword arguments.
     
     The available fields are:
-       header,modulair_id,frame_names,transforms,translations,translations_filtered,translations_mm,translations_body_mm,workspace_state,focus_state,leaving,joined,hands_together,hands_on_head,right_elbow_click,left_elbow_click,right_in_front,left_in_front,outside_workspace
+       header,modulair_id,frame_names,transforms,translations,translations_filtered,translations_mm,translations_body_mm,workspace_state,focused,leaving,joined,hands_together,hands_on_head,right_elbow_click,left_elbow_click,right_in_front,left_in_front,outside_workspace
     
     @param args: complete set of field values, in .msg order
     @param kwds: use keyword arguments corresponding to message field names
@@ -109,8 +109,8 @@ float64 w
         self.translations_body_mm = []
       if self.workspace_state is None:
         self.workspace_state = ''
-      if self.focus_state is None:
-        self.focus_state = ''
+      if self.focused is None:
+        self.focused = False
       if self.leaving is None:
         self.leaving = False
       if self.joined is None:
@@ -139,7 +139,7 @@ float64 w
       self.translations_mm = []
       self.translations_body_mm = []
       self.workspace_state = ''
-      self.focus_state = ''
+      self.focused = False
       self.leaving = False
       self.joined = False
       self.hands_together = False
@@ -206,11 +206,8 @@ float64 w
       _x = self.workspace_state
       length = len(_x)
       buff.write(struct.pack('<I%ss'%length, length, _x))
-      _x = self.focus_state
-      length = len(_x)
-      buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self
-      buff.write(_struct_9B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace))
+      buff.write(_struct_10B.pack(_x.focused, _x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -316,16 +313,11 @@ float64 w
       start = end
       end += length
       self.workspace_state = str[start:end]
-      start = end
-      end += 4
-      (length,) = _struct_I.unpack(str[start:end])
-      start = end
-      end += length
-      self.focus_state = str[start:end]
       _x = self
       start = end
-      end += 9
-      (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace,) = _struct_9B.unpack(str[start:end])
+      end += 10
+      (_x.focused, _x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace,) = _struct_10B.unpack(str[start:end])
+      self.focused = bool(self.focused)
       self.leaving = bool(self.leaving)
       self.joined = bool(self.joined)
       self.hands_together = bool(self.hands_together)
@@ -392,11 +384,8 @@ float64 w
       _x = self.workspace_state
       length = len(_x)
       buff.write(struct.pack('<I%ss'%length, length, _x))
-      _x = self.focus_state
-      length = len(_x)
-      buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self
-      buff.write(_struct_9B.pack(_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace))
+      buff.write(_struct_10B.pack(_x.focused, _x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace))
     except struct.error as se: self._check_types(se)
     except TypeError as te: self._check_types(te)
 
@@ -504,16 +493,11 @@ float64 w
       start = end
       end += length
       self.workspace_state = str[start:end]
-      start = end
-      end += 4
-      (length,) = _struct_I.unpack(str[start:end])
-      start = end
-      end += length
-      self.focus_state = str[start:end]
       _x = self
       start = end
-      end += 9
-      (_x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace,) = _struct_9B.unpack(str[start:end])
+      end += 10
+      (_x.focused, _x.leaving, _x.joined, _x.hands_together, _x.hands_on_head, _x.right_elbow_click, _x.left_elbow_click, _x.right_in_front, _x.left_in_front, _x.outside_workspace,) = _struct_10B.unpack(str[start:end])
+      self.focused = bool(self.focused)
       self.leaving = bool(self.leaving)
       self.joined = bool(self.joined)
       self.hands_together = bool(self.hands_together)
@@ -528,7 +512,7 @@ float64 w
       raise roslib.message.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = roslib.message.struct_I
-_struct_9B = struct.Struct("<9B")
+_struct_10B = struct.Struct("<10B")
 _struct_3I = struct.Struct("<3I")
 _struct_B = struct.Struct("<B")
 _struct_4d = struct.Struct("<4d")

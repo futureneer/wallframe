@@ -7,7 +7,7 @@ geometry_msgs/Vector3[] translations_filtered
 geometry_msgs/Vector3[] translations_mm
 geometry_msgs/Vector3[] translations_body_mm
 string workspace_state
-string focus_state
+bool focused
 bool leaving
 bool joined
 bool hands_together

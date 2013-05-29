@@ -457,9 +457,23 @@ class UserManager():
     # print state_packet
     pass
 
+  def check_focused_user(self):
+    closest = -1
+    closest_dist = 1000000
+    for uid, user in self.users_.items():
+      user_dist = user.current_state_msg.translations_mm[2].z
+      user.current_state_msg.focused = False
+      if all([user_dist < closest_dist,user_dist != 0.0]):
+        closest_dist = user_dist
+        closest = uid
+    if closest != -1:
+      self.users_[closest].current_state_msg.focused = True 
+    pass
+
   def update_user_state(self):
     for uid,user in self.users_.items():
       user.update_state()
+    self.check_focused_user()
 
   def check_users_exist(self):
     gone = []
