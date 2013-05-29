@@ -20,9 +20,28 @@
 
 namespace modulair{
 
-  struct AppUser{
-    std::map<std::string, Eigen::Vector3d> joint_positions;
-    std::map<std::string, Eigen::Vector3d> joint_body_positions;
+  class AppUser{
+  public:
+    AppUser(){};
+    ~AppUser(){};
+
+    Eigen::Vector3d jtPosByName(std::string j){ return joint_positions_[j]; };
+    Eigen::Vector3d jtPosBodyByName(std::string j){ return joint_body_positions_[j]; };
+    Eigen::Vector3d jtPosById(int id){ return joint_positions_[joint_names_[id]]; };
+    Eigen::Vector3d jtPosBodyById(int id){ return joint_positions_[joint_names_[id]]; };
+    std::string jtNameById(int id){ return joint_names_[id]; }
+    int jtIdByName(std::string id){
+        for(unsigned int i=0;i<joint_names_.size();i++){
+            if(joint_names_[i] == id){
+                return i;
+            } 
+        }
+        return -1;
+    }
+
+    std::map<std::string, Eigen::Vector3d> joint_positions_;
+    std::map<std::string, Eigen::Vector3d> joint_body_positions_;
+    std::vector<std::string> joint_names_;
     int user_id;
     bool focused;
     bool leaving;

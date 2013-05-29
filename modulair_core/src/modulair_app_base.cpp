@@ -72,14 +72,15 @@ namespace modulair{
     this->user_data_ = this->current_user_packet_.users;
     updateUserData();
 
-    AppUser u;
-    if(getFocusedUser(u)){
-      ROS_WARN_STREAM( "["<<u.joint_positions["torso"][0]<<","
-                          <<u.joint_positions["torso"][1]<<","
-                          <<u.joint_positions["torso"][2]<<"]");
-    }else{
-      ROS_WARN_STREAM("No Focused User");
-    }
+    //// Debugging Test
+    // AppUser u;
+    // if(getFocusedUser(u)){
+    //   ROS_WARN_STREAM( "["<<u.joint_positions_["torso"][0]<<","
+    //                       <<u.joint_positions_["torso"][1]<<","
+    //                       <<u.joint_positions_["torso"][2]<<"]");
+    // }else{
+    //   ROS_WARN_STREAM("No Focused User");
+    // }
   }
 
   void ModulairAppBase::userEventCallback(const modulair_msgs::ModulairUserEventConstPtr &user_event){
@@ -117,14 +118,15 @@ namespace modulair{
       user.left_in_front = user_data_[i].left_in_front;
       user.outside_workspace = user_data_[i].outside_workspace;
       // User Joints
+      user.joint_names_ = user_data_[i].frame_names;
       if (user.focused == true)
         this->focused_user_id_ = user.user_id;
-      for(unsigned int j_id = 0; j_id<user_data_[i].frame_names.size();j_id++){
-        user.joint_positions[user_data_[i].frame_names[j_id]] 
+      for(unsigned int j_id = 0; j_id < user_data_[i].frame_names.size();j_id++){
+        user.joint_positions_[user_data_[i].frame_names[j_id]] 
                 = Eigen::Vector3d(  user_data_[i].translations_mm[j_id].x,
                                     user_data_[i].translations_mm[j_id].y,
                                     user_data_[i].translations_mm[j_id].z);
-        user.joint_body_positions[user_data_[i].frame_names[j_id]] 
+        user.joint_body_positions_[user_data_[i].frame_names[j_id]] 
                 = Eigen::Vector3d(  user_data_[i].translations_body_mm[j_id].x,
                                     user_data_[i].translations_body_mm[j_id].y,
                                     user_data_[i].translations_body_mm[j_id].z);
