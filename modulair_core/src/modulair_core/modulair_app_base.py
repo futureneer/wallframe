@@ -21,23 +21,6 @@ from modulair_msgs.msg import TrackerUserArray as tracker_msg
 import modulair_core
 from modulair_core.srv import *
 
-# class ContainerWidget(QWidget):
-#   def __init__(self,name, app):
-#     super(ContainerWidget,self).__init__()
-#     self.name_ = name
-#     self.ok_timer_ = QTimer(self)
-#     self.app_ = app
-#     # Qt Connections
-#     self.connect(self.ok_timer_, QtCore.SIGNAL("timeout()"), self.check_ok)
-#     self.ok_timer_.start(15)
-#     # Publishers and Subscribers
-
-#   # @QtCore.Slot(bool)
-#   def check_ok(self):
-#     if rospy.is_shutdown():
-#       self.app_.exit()
-
-
 class ModulairAppWidget(QWidget):
   def __init__(self,name, app):
     super(ModulairAppWidget,self).__init__()
@@ -104,7 +87,3 @@ class ModulairAppWidget(QWidget):
 
   def user_event_cb(self,msg):
     pass
-
-# # MAIN
-# if __name__ == '__main__':
-#   m = ModulairAppWidget()
