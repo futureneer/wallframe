@@ -3,7 +3,7 @@ import roslib; roslib.load_manifest('modulair_core')
 import rospy,sys
 ### PySide ###
 import PySide
-from PySide.QtGui import QWidget, QApplication
+from PySide.QtGui import *
 from PySide.QtCore import QTimer
 from PySide import QtCore
 
@@ -22,11 +22,39 @@ import modulair_core
 from modulair_core.srv import *
 
 class UserTag(QWidget):
-  def __init__(self,uid):
-    super(UserTag,self).__init__()
+  def __init__(self,uid,parent,parent_width,parent_height):
+    super(UserTag,self).__init__(parent)
     self.uid_ = uid
+    self.parent_height_ = parent_height
+    self.parent_width_ = parent_width
     self.state_ = 'IDLE'
     self.mode_ = 'MINIMIZED'
+
+    self.height_ = int(self.parent_height_ * 0.7)
+    self.width_ = int(self.parent_width_ * 0.05)
+    self.y_ = int(self.parent_height_ * 0.15)
+
+    self.resize(self.width_, self.height_)
+    self.move(int(self.parent_width_/2.0),self.y_)
+    self.setStyleSheet("background-color:#ffffff;color:#222222")
+    self.setAutoFillBackground(True)
+    self.show()
+
+    bold_font = QFont()
+    bold_font.setBold(True)
+    bold_font.setPixelSize(self.height_ * 0.6)
+
+    self.label_ = QLabel("USER " + str(uid), self)
+    self.label_.resize(self.width_, self.height_)
+    self.label_.setStyleSheet("background-color:#ffffff;color:#222222")
+    self.label_.setAutoFillBackground(True)
+    self.label_.setAlignment(QtCore.Qt.AlignCenter)
+    self.label_.setFont(bold_font)
+    self.label_.show()
+
+  def set_pos(self,xpos):
+    self.move(xpos,self.y_)
+    pass
 
   def update_state(self):
     pass
@@ -49,22 +77,22 @@ class ModulairInfobar(QWidget):
     
     # App parameters
     if rospy.has_param("/modulair/core/params/x"):
-      self.x_ = rospy.get_param("/modulair/core/params/x")
+      self.wall_x_ = rospy.get_param("/modulair/core/params/x")
     else:
       rospy.logerr("ModulairInfobar: parameter [x] not found on server")
 
     if rospy.has_param("/modulair/core/params/y"):
-      self.y_ = rospy.get_param("/modulair/core/params/y")
+      self.wall_y_ = rospy.get_param("/modulair/core/params/y")
     else:
       rospy.logerr("ModulairInfobar: parameter [y] not found on server")
 
     if rospy.has_param("/modulair/core/params/width"):
-      self.width_ = rospy.get_param("/modulair/core/params/width")
+      self.wall_width_ = rospy.get_param("/modulair/core/params/width")
     else:
       rospy.logerr("ModulairInfobar: parameter [width] not found on server")
 
     if rospy.has_param("/modulair/core/params/height"):
-      self.height_ = rospy.get_param("/modulair/core/params/height")
+      self.wall_height_ = rospy.get_param("/modulair/core/params/height")
     else:
       rospy.logerr("ModulairInfobar: parameter [height] not found on server")
 
@@ -75,14 +103,16 @@ class ModulairInfobar(QWidget):
 
     # Set base app widget size and hints based on parameters
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-    self.w_height_ = int(self.height_ * (1.0 / self.height_perc_))
-    self.resize(self.width_, self.w_height_)
-    self.move(self.x_,self.y_ + self.height_-self.w_height_)
+    self.height_ = int(self.wall_height_ * self.height_perc_)
+    self.width_ = self.wall_width_
+    self.resize(self.width_, self.height_)
+    self.move(self.wall_x_,self.wall_y_ + self.wall_height_-self.height_)
+    self.setStyleSheet("background-color:#222222;color:#aaaaaa")
     self.show()
 
     # Set up ros_ok watchdog timer to handle termination and ctrl-c
     self.connect(self.ok_timer_, QtCore.SIGNAL("timeout()"), self.check_ok)
-    self.ok_timer_.start(15)
+    self.ok_timer_.start(10)
 
 
   def check_ok(self):
@@ -98,6 +128,8 @@ class ModulairInfobar(QWidget):
 
   def update_tag(self,uid):
     tag = self.user_tags_[uid]
+    userx = self.users_[uid].translations_mm[2].x
+    tag.set_pos(int(self.width_/2.0)+userx*1.5)
     # do stuff to tag (set position, update state etc)
 
   def update_tags(self):
@@ -107,8 +139,9 @@ class ModulairInfobar(QWidget):
         self.update_tag(uid)
       else:
         # make new tag
-        t = UserTag(uid)
-        user_tags_[uid] = t
+        rospy.logwarn("ModulairInfobar: Found [user " + str(uid) + "], creating tag")
+        t = UserTag(uid,self,self.width_,self.height_)
+        self.user_tags_[uid] = t
         self.update_tag(uid)
 
     # Check through tags to make sure each one has a user
@@ -117,16 +150,20 @@ class ModulairInfobar(QWidget):
       if uid not in self.users_.keys():
         tags_to_remove.append(uid)
     # Remove tags without users
-    for t in tags_to_remove:
-      del(self.user_tags_[t])
+    for tag in tags_to_remove:
+      rospy.logwarn("ModulairInfobar: Lost [user " + str(tag) + "], cleaning up tag")
+      self.user_tags_[tag].label_.hide()
+      self.user_tags_[tag].hide()
+      del(self.user_tags_[tag])
 
     pass    
 
   def user_state_cb(self,msg):
     self.current_users_ = msg.users
     self.num_users_ = len(self.current_users_)
+    self.users_.clear()
     for user in self.current_users_:
-      if user.focused = True:
+      if user.focused == True:
         self.focused_user_id_ = user.modulair_id
       self.users_[user.modulair_id] = user
 
