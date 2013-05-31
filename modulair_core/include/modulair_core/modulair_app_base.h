@@ -84,6 +84,7 @@ namespace modulair{
   protected:
     ros::NodeHandle node_;
     int x_,y_,width_,height_;
+    double height_perc_;
     unsigned int deque_size_;
     QString name_;
     QString asset_path_;

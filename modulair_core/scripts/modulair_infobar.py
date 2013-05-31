@@ -4,7 +4,7 @@ import rospy,sys
 ### PySide ###
 import PySide
 from PySide.QtGui import *
-from PySide.QtCore import QTimer
+from PySide.QtCore import *
 from PySide import QtCore
 
 from geometry_msgs.msg import Transform
@@ -37,6 +37,7 @@ class UserTag(QWidget):
     self.resize(self.width_, self.height_)
     self.move(int(self.parent_width_/2.0),self.y_)
     self.setStyleSheet("background-color:#ffffff;color:#222222")
+    # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
     self.setAutoFillBackground(True)
     self.show()
 
@@ -60,6 +61,9 @@ class UserTag(QWidget):
     pass
 
 class ModulairInfobar(QWidget):
+
+  toast_message_ = QtCore.Signal()
+  
   def __init__(self,app):
     super(ModulairInfobar,self).__init__()
     # Member variables    
@@ -74,7 +78,7 @@ class ModulairInfobar(QWidget):
     # ROS Subscribers
     self.user_state_sub_ = rospy.Subscriber("/modulair/users/state", ModulairUserArray, self.user_state_cb)
     self.user_event_sub_ = rospy.Subscriber("/modulair/users/events", ModulairUserEvent, self.user_event_cb)
-    
+    self.toast_sub_ = rospy.Subscriber("/modulair/info/toast", String, self.toast_cb)
     # App parameters
     if rospy.has_param("/modulair/core/params/x"):
       self.wall_x_ = rospy.get_param("/modulair/core/params/x")
@@ -110,10 +114,63 @@ class ModulairInfobar(QWidget):
     self.setStyleSheet("background-color:#222222;color:#aaaaaa")
     self.show()
 
+    self.toast_notifier_ = QLabel("Initial Text",self);
+    self.toast_w_ = int(self.width_ * 0.25)
+    self.toast_h_ = int(self.height_ * 0.7)
+    self.toast_x_ = int(self.width_ * 0.75)
+    self.toast_y_start_ = int(self.height_)
+    self.toast_y_end_ = int(self.height_ * 0.15)
+
+    bold_font = QFont()
+    bold_font.setBold(True)
+    bold_font.setPixelSize(self.toast_h_ * 0.9)
+
+    self.toast_notifier_.resize(self.toast_w_,self.toast_h_)
+    self.toast_notifier_.move(self.toast_x_,self.toast_y_start_)
+    self.toast_notifier_.setStyleSheet("background-color:#ffffff;color:#222222")
+    self.toast_notifier_.setAutoFillBackground(True)
+    self.toast_notifier_.setAlignment(QtCore.Qt.AlignCenter)
+    self.toast_notifier_.setFont(bold_font)
+    self.toast_notifier_.show()
+
+    self.toast_down_timer_ = QTimer()
+    self.toast_down_timer_.setSingleShot(True)
+    self.connect(self.toast_down_timer_, QtCore.SIGNAL("timeout()"), self.toast_down)
+
+    self.toast_message_.connect(self.toast)
+
     # Set up ros_ok watchdog timer to handle termination and ctrl-c
     self.connect(self.ok_timer_, QtCore.SIGNAL("timeout()"), self.check_ok)
     self.ok_timer_.start(10)
 
+  def toast_cb(self,message):
+    # rospy.logwarn("toast cb" + str(message.data))
+    self.toast_notifier_.setText(str(message.data))
+    self.toast_message_.emit()
+    pass
+  
+  @QtCore.Slot()
+  def toast(self):
+    # rospy.logwarn("toast call")
+    self.toast_up()
+    pass
+  def toast_up(self):
+    self.toast_down_timer_.stop()
+    animation = QPropertyAnimation(self.toast_notifier_, "geometry",self)
+    animation.setDuration(500)
+    animation.setStartValue(QRect(self.toast_x_, self.toast_y_start_, self.toast_w_,self.toast_h_))
+    animation.setEndValue(QRect(self.toast_x_, self.toast_y_end_, self.toast_w_,self.toast_h_))
+    animation.start()
+    self.toast_down_timer_.start(4000)
+    pass
+  def toast_down(self):
+    # rospy.logwarn("toasting down")
+    animation = QPropertyAnimation(self.toast_notifier_, "geometry",self)
+    animation.setDuration(500)
+    animation.setStartValue(QRect(self.toast_x_, self.toast_y_end_, self.toast_w_,self.toast_h_))
+    animation.setEndValue(QRect(self.toast_x_, self.toast_y_start_, self.toast_w_,self.toast_h_))
+    animation.start()
+    pass
 
   def check_ok(self):
     if rospy.is_shutdown():

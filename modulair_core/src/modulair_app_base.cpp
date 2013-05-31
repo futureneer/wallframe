@@ -51,14 +51,23 @@ namespace modulair{
         name_.toStdString().c_str(), node_.getNamespace().c_str());
       return false;
     }
+    if (!node_.getParam("/modulair/app/params/height_percentage", height_perc_)){
+      ROS_ERROR("Modulair%s: No height percentage on parameter server (namespace: %s)",
+        name_.toStdString().c_str(), node_.getNamespace().c_str());
+      return false;
+    }
+
+    ROS_WARN_STREAM("ModulairAppBase: App Dimensions are ["<<width_<<","<<height_<<"]");
+    ROS_WARN_STREAM("ModulairAppBase: Height Percentage set to " << height_perc_);
 
     // Build Container Widget
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setAutoFillBackground(true);
     this->setStyleSheet("background-color:#222222;");
 
+    ROS_WARN_STREAM("ModulairAppBase: Height is now " <<int(double(height_) * height_perc_));
     this->move(x_,y_);
-    this->resize(width_,height_);
+    this->resize(width_,int(double(height_) * height_perc_));
     this->setFocus();
     this->show();
 

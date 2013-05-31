@@ -424,7 +424,7 @@ class UserManager():
     self.user_event_pub_ = rospy.Publisher("/modulair/users/events",user_event_msg)
     self.modulair_event_pub = rospy.Publisher("/modulair/events",String)
     self.toast_pub_ = rospy.Publisher("/modulair/info/toast",String)
-    self.toast_pub_ = rospy.Publisher("/modulair/info/debug",String)
+    self.debug_pub_ = rospy.Publisher("/modulair/info/debug",String)
     # Subscriber
     self.tracker_sub = rospy.Subscriber("/modulair/tracker/users",tracker_msg,self.tracker_cb)
     # TF Listener
@@ -485,6 +485,7 @@ class UserManager():
       if rospy.has_param("modulair/user_data/"+str(g)):
         rospy.delete_param("modulair/user_data/"+str(g))
       rospy.logwarn("User [modulair UID: " + str(g) + "] lost, removing from list")
+      self.toast_pub_.publish(String("User "+str(g)+" Lost"))
       
       msg = user_event_msg()  
       msg.user_id = g
@@ -592,6 +593,7 @@ class UserManager():
           self.user_event_pub_.publish(msg)
 
           rospy.logwarn("Adding user: [tracker ID: " + str(user_packet.uid) + "], [modulair ID: " + str(self.current_uid_) + "]")
+          self.toast_pub_.publish(String("User "+str(self.current_uid_)+" Joined"))
           self.users_[u.mid_] = u
           rospy.set_param("modulair/user_data/"+str(u.mid_),self.users_[u.mid_].get_info())
           self.current_uid_ += 1

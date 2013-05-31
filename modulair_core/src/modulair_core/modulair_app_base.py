@@ -31,6 +31,7 @@ class ModulairAppWidget(QWidget):
     self.current_users_ = []
     self.users_ = {}
     self.num_users_ = 0
+    self.height_perc_ = 1
     self.focused_user_id_ = -1
     rospy.logwarn(self.name_ + ": App Widget Starting")
     # ROS Subscribers
@@ -58,9 +59,15 @@ class ModulairAppWidget(QWidget):
     else:
       rospy.logerr(self.name_ + ": parameter [height] not found on server")
 
+    if rospy.has_param("/modulair/app/params/height_percentage"):
+      self.height_perc_ = rospy.get_param("/modulair/app/params/height_percentage")
+    else:
+      rospy.logerr(self.name_ + ": parameter [height_percentage] not found on server")
+    rospy.logwarn(self.name_ + ": height percentage set to " + str(self.height_perc_))
+
     # Set base app widget size and hints based on parameters
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-    self.resize(self.width_, self.height_)
+    self.resize(self.width_, int(self.height_*self.height_perc_) )
     self.move(self.x_,self.y_)
     self.setWindowTitle(self.name_)
     self.show()
