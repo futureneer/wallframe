@@ -17,19 +17,29 @@
 # call launch file when button is pushed
 # Ask kel:
 #   1. how to get application names & protocol
-#   2. try kel's srv
-#   3. add subscriber to user manager + create cb() for different user events 
+#   2. try to get application name dynamically 
 
 
-# ROS Imports
-import roslib; roslib.load_manifest('modulair_user')
+# ROS import
+import roslib; roslib.load_manifest('modulair_core')
 import rospy
 
 # system import
 import os, collections, sys, math
 
+# PySide import
 from PySide.QtGui import QWidget, QApplication, QGridLayout, QPushButton, QLabel
 from PySide.QtCore import QSize
+
+# modulair import
+# msg
+from modulair_msgs.msg import ModulairUser
+from modulair_msgs.msg import ModulairUserArray
+from modulair_msgs.msg import ModulairUserEvent
+# srv
+import modulair_core
+from modulair_core.srv import *
+
 from modulair_app_menu_button import ModulairAppButton
 
 
@@ -74,13 +84,41 @@ class ModulairMenuView(QWidget):
 
     # ROS
     rospy.init_node('modulair_app_menu', anonymous=True)
-    # get ROS params
-    #    self.height_ = 400
-    #    self.width_ = 400
-    self.height_ = rospy.get_param('/modulair/core/params/height')
-    self.width_ = rospy.get_param('/modulair/core/params/width')
-    self.x_ = rospy.get_param('/modulair/core/params/x')
-    self.y_ = rospy.get_param('/modulair/core/params/y')
+
+    # ---- ROS subscriber ---
+    self.user_state_sub_ = rospy.Subscriber("/modulair/users/state",
+                                            ModulairUserArray,
+                                            self.user_state_cb)
+
+    self.user_event_sub_ = rospy.Subscriber("/modulair/users/events",
+                                            ModulairUserEvent,
+                                            self.user_event_cb)
+    
+
+    # ---- ROS get params -----
+    # height
+    if rospy.has_param("/modulair/core/params/height"):
+      self.height_ = rospy.get_param("/modulair/core/params/height")
+    else:
+      rospy.logerr("ModulairInfobar: parameter [height] not found on server")
+
+    # width
+    if rospy.has_param("/modulair/core/params/width"):
+      self.width_ = rospy.get_param("/modulair/core/params/width")
+    else:
+      rospy.logerr("ModulairInfobar: parameter [width] not found on server")
+
+    # x
+    if rospy.has_param("/modulair/core/params/x"):
+      self.x_ = rospy.get_param("/modulair/core/params/x")
+    else:
+      rospy.logerr("ModulairInfobar: parameter [x] not found on server")
+
+    # y
+    if rospy.has_param("/modulair/core/params/y"):
+      self.y_ = rospy.get_param("/modulair/core/params/y")
+    else:
+      rospy.logerr("ModulairInfobar: parameter [y] not found on server")
 
     # create model
     self.model_ = ModulairMenuModel(filelocation)
@@ -154,6 +192,38 @@ class ModulairMenuView(QWidget):
     self.app_list_ = sorted(self.model_.getAppList())
     self.gridSet_ = False
     self.assignWidgets()
+
+  # user_state_cb callback
+  def user_state_cb(self, msg):
+    pass
+
+  def user_event_cb(self, msg):
+    print msg.user_id
+    # assume HANDS_HEAD = PAUSE
+    if msg.event_id == 'hand_event':
+      print msg.event_id
+      if msg.message == 'hands_on_head':
+        rospy.logdebug("ModulairMenu: HANDS_HEAD received, should resume menu")
+        # wait or check current app status
+        # when app is paused
+        # then raise modulair_menu again
+        # now just refresh & raise menu
+        self.refresh()
+        self.show()
+        
+      # assume RIGHT_ELBOW_CLICK
+      if msg.message == 'right_elbow_click':
+        print msg.message
+        rospy.logdebug("ModulairMenu: RIGHT_ELBOW_CLICK received, let's launch app")
+        rospy.wait_for_service('modulair/core/app_manager/load_app')
+        print "here"
+        try:
+          self.srv_load_app = rospy.ServiceProxy('modulair/core/app_manager/load_app',
+                                                 modulair_core.srv.load_app)
+          ret_success = self.srv_load_app("Load_sample_app")
+          print ret_success
+        except rospy.ServiceException, e:
+          print "Service call failed: %s"%e
       
   # show widget and Qt.exec()
   def run(self):
