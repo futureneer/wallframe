@@ -16,8 +16,9 @@
 # use QPushbutton
 # call launch file when button is pushed
 # Ask kel:
-#   1. how to get application names & protocol
-#   2. try to get application name dynamically 
+#   1. test using real kinect 
+#   2. find out correct service call load (app name)
+#   3. GUI side 
 
 
 # ROS import
@@ -28,8 +29,9 @@ import rospy
 import os, collections, sys, math
 
 # PySide import
-from PySide.QtGui import QWidget, QApplication, QGridLayout, QPushButton, QLabel
-from PySide.QtCore import QSize
+from PySide.QtGui import * 
+from PySide.QtCore import *
+from PySide import QtCore
 
 # modulair import
 # msg
@@ -77,10 +79,19 @@ class ModulairMenuModel:
 # ============ VIEW =======================                    
 class ModulairMenuView(QWidget):
 
+  signal_cursor_ = QtCore.Signal()
+
   # constructor
   def __init__(self, filelocation):
     self.qt_app_ = QApplication(sys.argv)
     QWidget.__init__(self)
+
+    # member variables
+    self.current_users_ = []     # list of users
+    self.users_ = {}             # dict: (modulair_id, user)
+    self.num_users_ = 0          # total num of users
+    self.focused_user_id_ = -1   # focused user
+    self.app_menus_ = {}         # dict: (app_name, qwidget)
 
     # ROS
     rospy.init_node('modulair_app_menu', anonymous=True)
@@ -124,7 +135,7 @@ class ModulairMenuView(QWidget):
     self.model_ = ModulairMenuModel(filelocation)
     # Applications List
     self.app_list_ = sorted(self.model_.getAppList())
-    self.gridSet_ = False    
+    self.gridSet_ = False
 
     # setup Qt GUI
 #    self.setMinimumSize(QSize(self.width_,self.height_))
@@ -134,7 +145,14 @@ class ModulairMenuView(QWidget):
     self.gridLayout_ = QGridLayout() 
     self.assignWidgets() # create widget
     self.setLayout(self.gridLayout_)
+    # create cursor
+    cursor_pixmap = QPixmap('cursor.jpg')
+    print os.getcwd()
+    self.cursor_ = QCursor(cursor_pixmap.scaledToHeight(self.height_/20.0))
+    self.cursor_.setPos(100, 100)
+    self.setCursor(self.cursor_)
 
+    self.signal_cursor_.connect(self.slot_update_cursor)
   
   def setup_grid(self):
     """
@@ -169,6 +187,7 @@ class ModulairMenuView(QWidget):
 
   # create QLabel for each app + refresh button
   def assignWidgets(self):
+    self.app_menus_.clear()
     for app in self.app_list_:
       # widget = QLabel(app.name + '\n' + app.launchpath)
       widget = QLabel(app.name)
@@ -178,6 +197,7 @@ class ModulairMenuView(QWidget):
       widget.setFixedSize(self.height_/10.0, self.width_/10.0)
       nextx, nexty = self.next_pos()
       self.gridLayout_.addWidget(widget, nextx, nexty )
+      self.app_menus_[app.name] = widget
     
     widget = QPushButton('Refresh')
     widget.clicked.connect(self.refresh)
@@ -193,15 +213,29 @@ class ModulairMenuView(QWidget):
     self.gridSet_ = False
     self.assignWidgets()
 
-  # user_state_cb callback
+  # user_state_cb ros callback
   def user_state_cb(self, msg):
+    self.current_users_ = msg.users
+    self.num_users_ = len(self.current_users_)
+    self.users_.clear()
+    for user in self.current_users_:
+      if user.focused == True:
+        self.focused_user_id_ = user.modulair_id
+      self.users_[user.modulair_id] = user
+    
+    # self.cursor_.setPos(cursorx, cursory)
+    self.signal_cursor_.emit()    
+          
     pass
+  
 
+  # user_event_cb ros callback
   def user_event_cb(self, msg):
     print msg.user_id
-    # assume HANDS_HEAD = PAUSE
+
     if msg.event_id == 'hand_event':
       print msg.event_id
+      # assume HANDS_HEAD = PAUSE
       if msg.message == 'hands_on_head':
         rospy.logdebug("ModulairMenu: HANDS_HEAD received, should resume menu")
         # wait or check current app status
@@ -212,23 +246,43 @@ class ModulairMenuView(QWidget):
         self.show()
         
       # assume RIGHT_ELBOW_CLICK
-      if msg.message == 'right_elbow_click':
+      if msg.message == 'right_elbow_click' and self.current_app_name_ != "NONE":
         print msg.message
         rospy.logdebug("ModulairMenu: RIGHT_ELBOW_CLICK received, let's launch app")
         rospy.wait_for_service('modulair/core/app_manager/load_app')
-        print "here"
         try:
           self.srv_load_app = rospy.ServiceProxy('modulair/core/app_manager/load_app',
                                                  modulair_core.srv.load_app)
-          ret_success = self.srv_load_app("Load_sample_app")
+          ret_success = self.srv_load_app(self.current_app_name_)
           print ret_success
         except rospy.ServiceException, e:
-          print "Service call failed: %s"%e
+          rospy.logerr("Service call failed: %s" % e)
+    pass # user_event_cb
+
+  # Qt slot
+  def slot_update_cursor(self):
+    # update curser position to focused user
+    # pos(cursor) = self.users_[focused_user_id_]
+    cursorx = self.users_[self.focused_user_id_].translations[0].x
+    cursory = self.users_[self.focused_user_id_].translations[0].y
+    # print str(cursorx) + " " + str(cursory)
+    # self.cursor_.setPos(cursorx, cursory)
+
+    # check which app is under cursor (mouse)
+    self.current_app_name_ = "NONE"
+    for appname, appwidget in self.app_menus_.items():
+      if appwidget.underMouse():
+        self.current_app_name_ = appname
+
+    print self.current_app_name_
+    
+    pass # slot_update_cursor
       
   # show widget and Qt.exec()
   def run(self):
     self.show()
     self.qt_app_.exec_()
+    pass
 
         
 def test():
