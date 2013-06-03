@@ -8,6 +8,8 @@
   </group>
   <node pkg="modulair_core" name="modulair_infobar" type="modulair_infobar.py" output="screen"/>
 
+  <param name="/modulair/menu/params/cursor_path" value="$(find modulair_core)/assets/cursor.jpg" /> 
+  
   <rosparam>
     modulair:
       core:
@@ -24,7 +26,10 @@
           height_percentage: .03    
       menu:
         params:
-          height_percentage: 20.0    
+          height_percentage: .97
+          workspace_size: [-1200,1200,-600,600,1500,3000]
+          border_scale: .02
+          y_offset: 200
   </rosparam>
 
 

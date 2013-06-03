@@ -102,9 +102,13 @@ class ModulairAppManager():
 
   def clean_up(self):
     for app_id,app in self.apps_.items():
-      if rospy.has_param("/modulair/core/available_apps/" + app_id):
+      if rospy.has_param("/modulair/core/available_app/" + app_id):
         rospy.delete_param("/modulair/core/available_apps/" + app_id)
         print("App parameters for [" + app_id + "] cleaned up")
+
+      if rospy.has_param("/modulair/core/available_apps"):
+        rospy.delete_param("/modulair/core/available_apps")
+        print("Remaining parameters cleaned up")
     pass    
 
   def shutdown_all_apps(self):
@@ -162,11 +166,14 @@ class ModulairAppManager():
       rospy.logerr("ModulairAppManager: application path not found on parameter server")
     rospy.logwarn("ModulairAppManager: Loading Applications from [" + self.app_path_ + "]")
 
+    available_app_list = {}
+
     for app_full_path in self.find_files(self.app_path_, '*.launch'):
       split_path = app_full_path.split("/")
       if 'modulair_app' in split_path[len(split_path)-1]:
         app_launch_file = split_path[len(split_path)-1]
         app_launch_name = app_launch_file[:len(app_launch_file)-len('.launch')]
+        app_short_name = app_launch_name[len('modulair_app_'):]
         if split_path[len(split_path)-2] == 'launch':
           app_launch_package = split_path[len(split_path)-3]
         else:
@@ -177,13 +184,17 @@ class ModulairAppManager():
           app_package_path = '/'.join(full_path_split[:len(full_path_split)-2])
         else:
           app_package_path = '/'.join(full_path_split[:len(full_path_split)-1])
-        rospy.set_param("/modulair/core/available_apps/" + app_launch_name, app_package_path)
+        
+        available_app_list[app_short_name] = app_package_path
+        rospy.set_param("/modulair/core/available_app/" + app_launch_name, app_package_path)
 
 
         A = AppLaunchFile(app_launch_name,app_launch_file,app_launch_package,app_full_path,app_package_path,False)
         self.apps_[app_launch_name] = A
 
         rospy.loginfo("ModulairAppManager: Found [" + app_launch_name + "]  in package  [" + app_launch_package + "]")
+
+    rospy.set_param("/modulair/core/available_apps", available_app_list)
 
     pass
 
