@@ -185,6 +185,20 @@ class ModulairMenuView(QWidget):
     return ind_x, ind_y
 
 
+  # # KGUERIN
+  # def call_start_app(self):
+
+  #   pass
+
+  # def call_close_app(self):
+
+  #   pass
+
+  # def call_close_all_apps(self):
+
+  #   pass
+
+
   # create QLabel for each app + refresh button
   def assignWidgets(self):
     self.app_menus_.clear()
