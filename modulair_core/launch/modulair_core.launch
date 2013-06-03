@@ -18,6 +18,7 @@
           y: 24
           width: 5760
           height: 3197
+        default_app: image_storm
       app:
         params:
           height_percentage: .97
