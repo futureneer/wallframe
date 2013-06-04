@@ -30,26 +30,28 @@ from modulair_core.srv import *
 class ModulairCursor(QWidget):
   def __init__(self,image,parent):
     super(ModulairCursor,self).__init__(parent)
-    self.label_ = QLabel('cursor',self)
+    self.label_ = QLabel(self)
 
-    # self.label_.setPixmap(image)
-    bold_font = QFont()
-    bold_font.setBold(True)
-    bold_font.setPixelSize(150)
-
-    self.label_.setStyleSheet("background-color:#222222;color:#ffffff")
+    # bold_font = QFont()
+    # bold_font.setBold(True)
+    # bold_font.setPixelSize(150)
+    print image
+    # self.label_.setStyleSheet("background-color:#222222;color:#ffffff")
+    # self.label_.setAlignment(QtCore.Qt.AlignCenter)
+    # self.label_.setFont(bold_font)
+    self.w_ = 350
+    self.h_ = 350
+    self.label_.setPixmap(image)
     self.label_.setAutoFillBackground(True)
-    self.label_.setAlignment(QtCore.Qt.AlignCenter)
-    self.label_.setFont(bold_font)
-    self.w_ = 400
-    self.h_ = 200
+    self.label_.setScaledContents(True)
+    self.label_.setFixedSize(self.w_,self.h_)
     self.resize(self.w_,self.h_)
+    self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+    self.setStyleSheet("background:transparent;")
+    self.label_.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+    self.label_.setStyleSheet("background:transparent;")
     self.label_.move(0,0)
     self.label_.show()
-
-  def set_position(self,pos):
-    self.move(pos[0]-self.w_/2, pos[1]-self.h_/2)
-    pass
 
   def set_position(self,pos):
     self.move(pos[0]-self.w_/2, pos[1]-self.h_/2)
@@ -69,7 +71,6 @@ class ModularMenu(QWidget):
     self.num_users_ = 0          # total num of users
     self.focused_user_id_ = -1   # focused user
     self.app_menu_items_ = {}         # dict: (app_name, qwidget)
-    self.y_offset_ = 0
     self.hidden_ = False
     self.run_ = False
 
@@ -118,6 +119,11 @@ class ModularMenu(QWidget):
       self.cursor_path_ = rospy.get_param("/modulair/menu/params/cursor_path")
     else:
       rospy.logerr("ModulairInfobar: parameter [cursor_path] not found on server")
+    ### Background Image ###
+    if rospy.has_param("/modulair/menu/params/background_path"):
+      self.background_path_ = rospy.get_param("/modulair/menu/params/background_path")
+    else:
+      rospy.logerr("ModulairInfobar: parameter [background_path] not found on server")
     ### Application Locations ###
     if rospy.has_param("/modulair/core/available_apps"):
       self.app_paths_ = rospy.get_param("/modulair/core/available_apps")
@@ -145,6 +151,19 @@ class ModularMenu(QWidget):
       rospy.logerr("ModulairInfobar: parameter [height_percentage] not found on server")
     rospy.logwarn("ModulairInfobar: height percentage set to " + str(self.height_perc_))
     self.height_ = int(self.height_*self.height_perc_)
+
+    self.bg = QWidget()
+    self.bg.resize(self.width_, self.height_)
+    self.bg.move(self.x_,self.y_)
+    self.bg.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    self.bg.show()
+    self.bgl = QLabel(self.bg)
+    self.bgl.move(0,0)
+    self.bgl.resize(self.width_,self.height_)
+    self.bgl.setScaledContents(True)
+    self.bgl.setAutoFillBackground(True)
+    self.bgl.setPixmap(self.background_path_)
+    self.bgl.show()
     
     # Get app list
     self.app_list_ = self.app_paths_.keys()
@@ -158,6 +177,17 @@ class ModularMenu(QWidget):
     self.resize(self.width_, self.height_)
     self.move(self.x_,self.y_)
     self.setLayout(self.gridLayout_)
+    self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+    # self.setStyleSheet("background:transparent;")
+
+    self.background_ = QLabel(self)
+    self.background_.move(0,0)
+    self.background_.resize(self.width_,self.height_)
+    self.background_.setScaledContents(True)
+    self.background_.setAutoFillBackground(True)
+    self.background_.setPixmap(self.background_path_)
+    self.background_.show()
+
     # Create App Widgets
     self.assignWidgets() # create widget
     # Timers
@@ -173,9 +203,12 @@ class ModularMenu(QWidget):
     self.signal_show_.connect(self.show_menu)
     self.signal_hide_.connect(self.hide_menu)
 
+
   def check_ok(self):
     if rospy.is_shutdown():
-          self.qt_app_.exit()
+      self.qt_app_.exit()
+    else:
+      self.update_cursor()      
     pass
 
   def setup_grid(self):
@@ -212,7 +245,7 @@ class ModularMenu(QWidget):
     x_center = int(self.width_/2)
     y_center = int(self.height_/2)
     x_pos = int(x_center + (self.width_/x_total)*user_pos[0])
-    y_pos = int(y_center + -(self.height_/y_total)*user_pos[1] + self.y_offset_)
+    y_pos = int(y_center + (-(self.height_/y_total)*user_pos[1]) - self.y_offset_)
     
     if y_pos < 0.0:
       y_pos = 100
@@ -230,15 +263,19 @@ class ModularMenu(QWidget):
   def assignWidgets(self):
     self.app_menu_items_.clear()
     for app, app_path in self.app_paths_.items():
-      widget = QLabel(app,self)
-      image = app_path + '/menu_icon.jpg'
+      label = QLabel(app,self)
+      image = app_path + '/menu_icon.png'
       rospy.logwarn('ModulairMenu:  Adding button for '+app+" app.")
-      widget.setPixmap(image)
-      widget.setFixedSize((self.width_/self.max_x_)-self.border_, (self.height_/self.max_y_)-self.border_)
-      widget.show()
+      label.setPixmap(image)
+      label.setAutoFillBackground(True)
+      label.setScaledContents(True)
+      label.setFixedSize((self.width_/(16.0/4.0))-self.border_, (self.height_/(9.0/4.0))-self.border_)
+      label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+      label.setStyleSheet("background:transparent;")
+      label.show()
       nextx, nexty = self.next_pos()
-      self.gridLayout_.addWidget(widget, nextx, nexty )
-      self.app_menu_items_[app] = widget
+      self.gridLayout_.addWidget(label, nextx, nexty )
+      self.app_menu_items_[app] = label
 
   # user_state_cb ros callback
   def user_state_cb(self, msg):
@@ -252,7 +289,7 @@ class ModularMenu(QWidget):
           self.focused_user_id_ = user.modulair_id
         self.users_[user.modulair_id] = user
       
-      self.update_cursor()      
+      # self.update_cursor()      
     pass
   
   # user_event_cb ros callback
@@ -317,28 +354,30 @@ class ModularMenu(QWidget):
 
   def hide_menu(self):
     self.hide()
+    self.update()
     self.hidden_ = True
     rospy.logwarn("ModulairMenu: setting to hidden")
     pass
 
   def show_menu(self):
     self.show()
+    self.update()
     self.hidden_ = False
     rospy.logwarn("ModulairMenu: setting to visible")
     pass
 
   def update_cursor(self):
-
-    if self.focused_user_id_ != -1:
-      cursorx = self.users_[self.focused_user_id_].translations_mm[8].x
-      cursory = self.users_[self.focused_user_id_].translations_mm[8].y
-      cursor_position = self.convert_workspace([cursorx,cursory])
-      self.cursor_.set_position(cursor_position)
-      # Update which app is under cursor (mouse)
-      self.current_app_name_ = "NONE"
-      for appname, appwidget in self.app_menu_items_.items():
-        if appwidget.geometry().contains(cursor_position[0],cursor_position[1]):
-          self.current_app_name_ = appname
+    if self.run_:
+      if self.focused_user_id_ != -1:
+        cursorx = self.users_[self.focused_user_id_].translations_mm[8].x
+        cursory = self.users_[self.focused_user_id_].translations_mm[8].y
+        cursor_position = self.convert_workspace([cursorx,cursory])
+        self.cursor_.set_position(cursor_position)
+        # Update which app is under cursor (mouse)
+        self.current_app_name_ = "NONE"
+        for appname, appwidget in self.app_menu_items_.items():
+          if appwidget.geometry().contains(cursor_position[0],cursor_position[1]):
+            self.current_app_name_ = appname
       
   def run(self):
     self.show()
