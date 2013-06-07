@@ -9,6 +9,7 @@
   <node pkg="modulair_core" name="modulair_infobar" type="modulair_infobar.py" output="screen"/>
 
   <param name="/modulair/menu/params/cursor_path" value="$(find modulair_core)/assets/cursor_open.png" /> 
+  <param name="/modulair/menu/params/cursor_path_alt" value="$(find modulair_core)/assets/cursor_closed.png" /> 
   <param name="/modulair/menu/params/background_path" value="$(find modulair_core)/assets/background.jpg" /> 
   <node pkg="modulair_core" name="modulair_app_menu" type="modulair_app_menu.py" output="screen"/>
   
@@ -33,6 +34,7 @@
           workspace_size: [-1200,1200,-600,600,1500,3000]
           border_scale: .02
           y_offset: -600.0
+          screensaver: no
   </rosparam>
 
 

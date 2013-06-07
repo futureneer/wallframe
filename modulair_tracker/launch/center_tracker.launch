@@ -1,15 +1,16 @@
+<!-- WallFrameTracker Launch File -->
 <launch>
 
 	<arg name="tracker_name" default="tracker_center" />
-	<arg name="tracker_id" default="#1" />
+	<arg name="tracker_id" default="#3" />
 	<!-- <arg name="tracker_bus_id" default="001@15"/> -->
 
-	<include file="$(find openni_launch)/launch/openni.launch">
+	<!-- <include file="$(find openni_launch)/launch/openni.launch">
 		<arg name="camera" value="$(arg tracker_name)" />
 		<arg name="device_id" value="$(arg tracker_id)" />
 		<arg name="rgb_camera_info_url"   value="file://$(env ROS_HOME)/camera_info/rgb_$(arg tracker_id).yaml" />
 		<arg name="depth_camera_info_url" value="file://$(env ROS_HOME)/camera_info/depth_$(arg tracker_id).yaml" />
-	</include>
+	</include> -->
 
 	<node name="XnSensorServerKillerNode" output="screen" pkg="modulair_tracker" type="modulair_tracker_node" launch-prefix="bash $(find modulair_tracker)/xn_sensor_server_cleanup.sh" />
 	

@@ -13,5 +13,7 @@
         hand_limit: 100
         head_limit: 220
         elbow_limit: 100
+        user_filtering: no
+        hand_click: no
   </rosparam>
 </launch>

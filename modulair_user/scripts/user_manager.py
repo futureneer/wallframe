@@ -8,6 +8,7 @@ from geometry_msgs.msg import Transform
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Bool
 from std_msgs.msg import String
+from std_msgs.msg import Float32
 # Modulair Imports
 from modulair_msgs.msg import ModulairUser as user_msg
 from modulair_msgs.msg import ModulairUserArray as user_array_msg
@@ -17,33 +18,36 @@ from modulair_msgs.msg import TrackerUserArray as tracker_msg
 # Helper functions and classes (local)
 from OneEuroFilter import OneEuroFilter
 from Switch import switch
-
+# Python Library Functions
 from math import sqrt, pow
 import itertools
 from itertools import izip
 
-# for reference frame IDs:
-# 0["head"]
-# 1["neck"]
-# 2["torso"]
-# 3["right_shoulder"]
-# 4["left_shoulder"]
-# 5["right_elbow"]
-# 6["left_elbow"]
-# 7["right_hand"]
-# 8["left_hand"]
-# 9["right_hip"]
-# 10["left_hip"]
-# 11["right_knee"]
-# 12["left_knee"]
-# 13["right_foot"]
-# 14["left_foot"]
+### FOR REFERENCE frame IDs ###
+#----- 0["head"]
+#----- 1["neck"]
+#----- 2["torso"]
+#----- 3["right_shoulder"]
+#----- 4["left_shoulder"]
+#----- 5["right_elbow"]
+#----- 6["left_elbow"]
+#----- 7["right_hand"]
+#----- 8["left_hand"]
+#----- 9["right_hip"]
+#----- 10["left_hip"]
+#----- 11["right_knee"]
+#----- 12["left_knee"]
+#----- 13["right_foot"]
+#----- 14["left_foot"]
 
+################################################################################
 class User():
-  def __init__(self,uid,tf_listener,user_event_pub):
+
+  def __init__(self,uid,tf_listener,user_event_pub,filtering,hand_click):
     # Init from constructor
     self.mid_ = uid
     self.listener_ = tf_listener
+    self.filtering_ = filtering
     self.user_event_pub_ = user_event_pub
     # Initial Structures    
     self.exists_in_tracker = {}
@@ -54,7 +58,6 @@ class User():
     self.transforms_merged_ = []
     self.translations_ = {}
     self.translations_merged = []
-    self.translations_merged_filtered_ = []
     self.merged_transform_exists_ = []
     self.tracker_transform_exists_ = {}
     self.current_state_msg = user_msg()
@@ -62,6 +65,7 @@ class User():
     self.is_primary_ = False
     self.exists_ = False
     self.init_filters_ = False
+    self.hand_click_ = hand_click
     # State
     self.state__ = "IDLE"
     # Prameters from parameter server
@@ -75,6 +79,13 @@ class User():
     self.run_frequency_     = rospy.get_param('/modulair/user/run_frequency',1.0)   
     self.workspace_limits_  = rospy.get_param('/modulair/user/workspace_limits')
 
+    self.vpub_ = rospy.Publisher('/modulair/user/vel',Float32)
+    self.hand_x_ = 0.0
+    self.hand_y_ = 0.0
+    self.up_cnt_ = 0
+    self.vels_ = []
+    self.cl_ = False
+
   def get_transforms(self):
     self.transforms_.clear()
     self.translations_.clear()
@@ -87,7 +98,8 @@ class User():
       self.translations_[tracker] = []
       self.tracker_transform_exists_[tracker] = []
       for frame_id in self.tracker_packets_[tracker].frames:
-        self.frame_names_.append(frame_id)
+        if frame_id not in self.frame_names_:
+          self.frame_names_.append(frame_id)
         # print "for frame " + str(frame_id)
         parent_frame = self.base_frame_
         child_frame = '/' + str(tracker) + '/' + frame_id + '_' + str(uid)
@@ -117,20 +129,21 @@ class User():
         self.transforms_[tracker].append(t)
         self.translations_[tracker].append(tl)
 
+  def set_up_filtering(self):
     ### Initialize filters if not already done
     if self.init_filters_ == False:
       self.translation_filters_ = [[OneEuroFilter(self.run_frequency_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
                         OneEuroFilter(self.run_frequency_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_),
                         OneEuroFilter(self.run_frequency_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_)]]*len(self.frame_names_)
       self.translation_timestamps_ = [[0.0,0.0,0.0]]*len(self.frame_names_)
-      self.translations_merged_filtered_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
-      self.translations_merged_filtered_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
-      self.translations_merged_filtered_body_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
-      self.transforms_merged = [Transform()]*len(self.frame_names_)
+      self.transforms_merged_ = [Transform()]*len(self.frame_names_)
       self.translations_merged_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
+      self.translations_merged_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
+      self.translations_merged_body_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
       self.merged_transform_exists_ = [False]*len(self.frame_names_)
       self.init_filters_ = True
 
+  def merge_multiple_trackers(self):
     ### Merge transformation frames from multiple trackers
     index = 0
     for frame in iter(self.frame_names_):
@@ -143,7 +156,7 @@ class User():
             best_conf = packet.confs[index]
             best_tracker = tracker
         if self.tracker_transform_exists_[tracker_id][index] == True:
-          self.transforms_merged[index] = self.transforms_[best_tracker][index]
+          self.transforms_merged_[index] = self.transforms_[best_tracker][index]
           self.translations_merged_[index] = self.translations_[best_tracker][index]
           self.merged_transform_exists_[index] = True
         else:
@@ -151,7 +164,7 @@ class User():
       else:
         tracker_id = self.tracker_uids_.keys()[0] # first and only tracker
         if self.tracker_transform_exists_[tracker_id][index] == True:
-          self.transforms_merged[index] = self.transforms_[tracker_id][index]
+          self.transforms_merged_[index] = self.transforms_[tracker_id][index]
           self.translations_merged_[index] = self.translations_[tracker_id][index]
           self.merged_transform_exists_[index] = True
         else:
@@ -159,45 +172,42 @@ class User():
         pass
       index += 1
 
+  def calculate_frames(self):
     ### Filter frames
     index = 0
-    for translation, timestamp in izip(self.translations_merged_, self.translation_timestamps_):
+    for translation_merged, timestamp in izip(self.translations_merged_, self.translation_timestamps_):
       if self.merged_transform_exists_[index] == True:
-        t = Vector3()
-        t.x = self.translation_filters_[index][0](translation.x, timestamp[0])
-        timestamp[0] += 1.0/self.run_frequency_
-        t.y = self.translation_filters_[index][1](translation.y, timestamp[1])
-        timestamp[1] += 1.0/self.run_frequency_
-        t.z = self.translation_filters_[index][2](translation.z, timestamp[2])
-        timestamp[2] += 1.0/self.run_frequency_
-
-        # TODO Fix filtering
-        # self.translations_merged_filtered_[index] = t
-        # self.translations_merged_filtered_mm_[index] = Vector3(t.x*1000,t.y*1000,t.z*1000)
-        self.translations_merged_filtered_[index] = Vector3( self.translations_merged_[index].x,
-                                                                self.translations_merged_[index].y,
-                                                                self.translations_merged_[index].z)
-        self.translations_merged_filtered_mm_[index] = Vector3( self.translations_merged_[index].x*1000,
-                                                                self.translations_merged_[index].y*1000,
-                                                                self.translations_merged_[index].z*1000)
+        if self.filtering_ == True:
+          t = Vector3()
+          t.x = self.translation_filters_[index][0](translation_merged.x, timestamp[0])
+          timestamp[0] += 1.0/self.run_frequency_
+          t.y = self.translation_filters_[index][1](translation_merged.y, timestamp[1])
+          timestamp[1] += 1.0/self.run_frequency_
+          t.z = self.translation_filters_[index][2](translation_merged.z, timestamp[2])
+          timestamp[2] += 1.0/self.run_frequency_
+          # TODO Fix filtering
+          self.translations_merged_[index] = t
+          self.translations_merged_mm_[index] = Vector3(t.x*1000,t.y*1000,t.z*1000)
+          self.translations_merged_body_mm_[index] = Vector3( self.translations_merged_mm_[index].x - self.translations_merged_mm_[2].x, 
+                                                              self.translations_merged_mm_[index].y - self.translations_merged_mm_[2].y, 
+                                                              self.translations_merged_mm_[index].z - self.translations_merged_mm_[2].z)
+        else:
+          # Not filtering, translations_merged_ already calculated
+          self.translations_merged_mm_[index] = Vector3( self.translations_merged_[index].x*1000,
+                                                      self.translations_merged_[index].y*1000,
+                                                      self.translations_merged_[index].z*1000)
+          self.translations_merged_body_mm_[index] = Vector3( self.translations_merged_mm_[index].x - self.translations_merged_mm_[2].x, 
+                                                              self.translations_merged_mm_[index].y - self.translations_merged_mm_[2].y, 
+                                                              self.translations_merged_mm_[index].z - self.translations_merged_mm_[2].z)
       index += 1
 
-    ### Body frames
-    index = 0
-    for frame_id in self.frame_names_:
-      if self.merged_transform_exists_[index] == True:
-        # Subtrackt torso location to normalize from body center
-        self.translations_merged_filtered_body_mm_[index] = Vector3(self.translations_merged_filtered_mm_[index].x - self.translations_merged_filtered_mm_[2].x, 
-                                                                    self.translations_merged_filtered_mm_[index].y - self.translations_merged_filtered_mm_[2].y, 
-                                                                    self.translations_merged_filtered_mm_[index].z - self.translations_merged_filtered_mm_[2].z)
-      index += 1
-
+  def broadcast_frames(self):
     ### Broadcast Frames
     index = 0
     br = tf.TransformBroadcaster()
     for frame_id in self.frame_names_:
       if self.merged_transform_exists_[index] == True:
-        trans = self.translations_merged_filtered_[index]
+        trans = self.translations_merged_[index]
         rot = tf.transformations.quaternion_from_euler(0, 0, 1)
         br.sendTransform((trans.x, trans.y, trans.z),
                          rot,
@@ -205,7 +215,6 @@ class User():
                          "user_"+str(self.mid_)+"_"+self.frame_names_[index]+"_merged",
                          self.base_frame_)
       index += 1
-
     pass
 
   def get_info(self):
@@ -225,8 +234,11 @@ class User():
     self.exists_ = ex  
 
   def update_state(self):
-
     self.get_transforms()
+    self.set_up_filtering()
+    self.merge_multiple_trackers()
+    self.calculate_frames()
+    self.broadcast_frames()
     self.merge_to_state_msg()
     self.evaluate_events()
     self.evaluate_state()
@@ -237,8 +249,8 @@ class User():
 
   def joint_dist(self,joint1,joint2):
 
-    j1 = self.translations_merged_filtered_mm_[self.joint_by_name(joint1)]
-    j2 = self.translations_merged_filtered_mm_[self.joint_by_name(joint2)]
+    j1 = self.translations_merged_mm_[self.joint_by_name(joint1)]
+    j2 = self.translations_merged_mm_[self.joint_by_name(joint2)]
 
     if self.not_zero(j1,j2) == False:
       return -1
@@ -258,7 +270,7 @@ class User():
       return True
 
   def check_outside_workspace(self):
-    torso = self.translations_merged_filtered_mm_[self.joint_by_name('torso')]
+    torso = self.translations_merged_mm_[self.joint_by_name('torso')]
     if all( [ torso.x > self.workspace_limits_[0],
               torso.x < self.workspace_limits_[1],
               torso.y > self.workspace_limits_[2],
@@ -270,10 +282,10 @@ class User():
       return True
 
   def joint_pos(self,j):
-    return self.translations_merged_filtered_mm_[self.joint_by_name(j)]
+    return self.translations_merged_mm_[self.joint_by_name(j)]
   
   def joint_body_pos(self,j):
-    return self.translations_merged_filtered_body_mm_[self.joint_by_name(j)]
+    return self.translations_merged_body_mm_[self.joint_by_name(j)]
 
   def not_zero(self,joint1,joint2):
     nz = True
@@ -289,26 +301,22 @@ class User():
       self.current_state_msg.hands_together = True
     else:
       self.current_state_msg.hands_together = False
-
     # Hands on Head
     if all( [self.check_joint_dist(self.head_limit_,'right_hand','head'),
                 self.check_joint_dist(self.head_limit_,'left_hand','head')] ):
       self.current_state_msg.hands_on_head = True
     else:
       self.current_state_msg.hands_on_head = False
-
     # Right Elbow Click
     if self.check_joint_dist(self.hand_limit_,'left_hand','right_elbow'):
       self.current_state_msg.right_elbow_click = True
     else:
       self.current_state_msg.right_elbow_click = False
-
     # Left Elbow Click
     if self.check_joint_dist(self.hand_limit_,'right_hand','left_elbow'):
       self.current_state_msg.left_elbow_click = True
     else:
       self.current_state_msg.left_elbow_click = False
-
     # Right Hand Front 
     if self.joint_body_pos('right_hand').y > self.joint_body_pos('left_hand').y:
       self.current_state_msg.right_in_front = True
@@ -316,9 +324,38 @@ class User():
     else:
       self.current_state_msg.right_in_front = False
       self.current_state_msg.left_in_front = True
-
     # Workspace Limit
     self.current_state_msg.outside_workspace = self.check_outside_workspace()
+    # Hand Click
+    if self.hand_click_ == True:
+      cur_vel_x = (self.joint_pos('left_hand').x - self.hand_x_)/2.0
+      cur_vel_y = (self.joint_pos('left_hand').y - self.hand_y_)/2.0
+      self.hand_x_ = self.joint_pos('left_hand').x
+      self.hand_y_ = self.joint_pos('left_hand').y
+      self.vpub_.publish(Float32(cur_vel_x))
+      if cur_vel_y > -5.0 and cur_vel_y < 5.0:
+        if cur_vel_x < -5.0:
+          self.cl_ = True
+        if self.cl_ == True:
+          self.up_cnt_ += 1
+          self.vels_.append(cur_vel_x)
+        if self.cl_ == True and self.up_cnt_ == 6:
+          v = False
+          p = ''
+          for vel in self.vels_:
+            p = p + ' ' + str(vel)
+            if vel > 4.0:
+              v = True
+          if v == True:
+            msg = user_event_msg()  
+            msg.user_id = self.mid_
+            msg.event_id = 'hand_event'
+            msg.message = 'left_elbow_click'
+            self.user_event_pub_.publish(msg)
+          # Reset
+          self.cl_ = False
+          self.up_cnt_ = 0
+          self.vels_ = []
     pass
 
   def evaluate_state(self):
@@ -396,13 +433,12 @@ class User():
 
     msg.transforms = self.transforms_merged_
     msg.translations = self.translations_merged_
-    msg.translations_filtered = self.translations_merged_filtered_
-    # TODO Fix Filtering
-    msg.translations_mm = self.translations_merged_filtered_mm_
-    msg.translations_body_mm = self.translations_merged_filtered_body_mm_
+    msg.translations_mm = self.translations_merged_mm_
+    msg.translations_body_mm = self.translations_merged_body_mm_
     self.current_state_msg = msg
     pass
 
+################################################################################
 class UserManager():
 
   def __init__(self):
@@ -417,7 +453,27 @@ class UserManager():
     self.time_ = rospy.get_time()
     # ROS Params
     self.com_dist_thresh_   = rospy.get_param('/modulair/user/center_distance_threshold',100) # default is 100 mm
-    self.run_frequency_    = rospy.get_param('/modulair/user/run_frequency',30.0)   
+    self.run_frequency_    = rospy.get_param('/modulair/user/run_frequency',30.0)
+
+    filtering = rospy.get_param('/modulair/user/user_filtering')
+    if filtering == False:
+      self.filtering_ = False
+      rospy.logwarn("ModulairUserManager: User Filtering set to FALSE")
+    elif filtering == True:
+      self.filtering_ = True
+      rospy.logwarn("ModulairUserManager: User Filtering set to TRUE")
+    else:
+      rospy.logwarn("ModulairUserManager: user_filtering parameter invalid value ["+str(filtering)+"]or not found")
+
+    hand_click = rospy.get_param('/modulair/user/hand_click')
+    if hand_click == False:
+      self.hand_click_ = False
+      rospy.logwarn("ModulairUserManager: User Hand Based Click set to FALSE")
+    elif hand_click == True:
+      self.hand_click_ = True
+      rospy.logwarn("ModulairUserManager: User Hand Based Click set to TRUE")
+    else:
+      rospy.logwarn("ModulairUserManager: hand_click parameter invalid value ["+str(hand_click)+"]or not found")
 
     # Publishers
     self.user_state_pub_ = rospy.Publisher("/modulair/users/state",user_array_msg)
@@ -505,7 +561,6 @@ class UserManager():
         self.user_event_pub_.publish(msg)
         self.no_users_ = True
 
-
   def check_com(self,user_packet,user):
     packet_com = user_packet.center_of_mass
     user_com = user.state_.center_of_mass
@@ -580,7 +635,9 @@ class UserManager():
 
           u = User( self.current_uid_,
                     self.tf_listener_,
-                    self.user_event_pub_)
+                    self.user_event_pub_,
+                    self.filtering_,
+                    self.hand_click_)
           u.tracker_uids_[user_packet.tracker_id] = user_packet.uid
           u.tracker_packets_[user_packet.tracker_id] = user_packet
           u.exists_in_tracker[user_packet.tracker_id] = True
@@ -603,6 +660,7 @@ class UserManager():
           add_new_user = False
     pass
 
+################################################################################
 # MAIN
 if __name__ == '__main__':
   m = UserManager()

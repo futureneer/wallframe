@@ -21,6 +21,7 @@ from modulair_msgs.msg import TrackerUserArray as tracker_msg
 import modulair_core
 from modulair_core.srv import *
 
+'''
 class UserTag(QWidget):
   def __init__(self,uid,parent,parent_width,parent_height):
     super(UserTag,self).__init__(parent)
@@ -59,7 +60,48 @@ class UserTag(QWidget):
 
   def update_state(self):
     pass
+'''
 
+################################################################################
+class UserTag(QWidget):
+  def __init__(self,uid,parent,parent_width,parent_height):
+    super(UserTag,self).__init__()
+    self.uid_ = uid
+    self.parent_height_ = parent_height
+    self.parent_width_ = parent_width
+    self.state_ = 'IDLE'
+    self.mode_ = 'MINIMIZED'
+    self.parent_ = parent
+
+    self.height_ = int(self.parent_height_ * 3)
+    self.width_ = int(self.parent_width_ * 0.05)
+    self.y_ = int(self.parent_.wall_height_ - self.parent_height_ * 3)
+
+    self.resize(self.width_, self.height_)
+    self.move(int(self.parent_width_/2.0),self.y_)
+    self.setStyleSheet("background-color:#ffffff;color:#222222")
+    self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
+    self.setAutoFillBackground(True)
+    self.show()
+
+    bold_font = QFont()
+    bold_font.setBold(True)
+    bold_font.setPixelSize(self.height_ * 0.15)
+
+    self.label_ = QLabel("USER " + str(uid), self)
+    self.label_.resize(self.width_, self.height_)
+    self.label_.setStyleSheet("background-color:#ffffff;color:#222222")
+    self.label_.setAutoFillBackground(True)
+    self.label_.setAlignment(QtCore.Qt.AlignCenter)
+    self.label_.setFont(bold_font)
+    self.label_.show()
+
+  def set_pos(self,xpos):
+    self.move(xpos+self.parent_.wall_x_,self.y_)
+    pass
+
+################################################################################
 class ModulairInfobar(QWidget):
 
   toast_message_ = QtCore.Signal()
@@ -154,6 +196,7 @@ class ModulairInfobar(QWidget):
     # rospy.logwarn("toast call")
     self.toast_up()
     pass
+
   def toast_up(self):
     self.toast_down_timer_.stop()
     animation = QPropertyAnimation(self.toast_notifier_, "geometry",self)
@@ -163,6 +206,7 @@ class ModulairInfobar(QWidget):
     animation.start()
     self.toast_down_timer_.start(4000)
     pass
+
   def toast_down(self):
     # rospy.logwarn("toasting down")
     animation = QPropertyAnimation(self.toast_notifier_, "geometry",self)

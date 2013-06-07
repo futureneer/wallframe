@@ -28,30 +28,45 @@ from modulair_core.srv import *
 
 
 class ModulairCursor(QWidget):
-  def __init__(self,image,parent):
+  def __init__(self,image,image_alt,parent):
     super(ModulairCursor,self).__init__(parent)
-    self.label_ = QLabel(self)
-
-    # bold_font = QFont()
-    # bold_font.setBold(True)
-    # bold_font.setPixelSize(150)
-    print image
-    # self.label_.setStyleSheet("background-color:#222222;color:#ffffff")
-    # self.label_.setAlignment(QtCore.Qt.AlignCenter)
-    # self.label_.setFont(bold_font)
     self.w_ = 350
     self.h_ = 350
+    self.resize(self.w_,self.h_)
+    self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+    self.setStyleSheet("background:transparent;")
+    self.label_ = QLabel(self)
+    self.label_alt_ = QLabel(self)
+
     self.label_.setPixmap(image)
     self.label_.setAutoFillBackground(True)
     self.label_.setScaledContents(True)
     self.label_.setFixedSize(self.w_,self.h_)
-    self.resize(self.w_,self.h_)
-    self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-    self.setStyleSheet("background:transparent;")
     self.label_.setAttribute(QtCore.Qt.WA_TranslucentBackground)
     self.label_.setStyleSheet("background:transparent;")
     self.label_.move(0,0)
+    self.label_.show()    
+
+    self.label_alt_.setPixmap(image_alt)
+    self.label_alt_.setAutoFillBackground(True)
+    self.label_alt_.setScaledContents(True)
+    self.label_alt_.setFixedSize(self.w_,self.h_)
+    self.label_alt_.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+    self.label_alt_.setStyleSheet("background:transparent;")
+    self.label_alt_.move(0,0)
+    self.label_alt_.hide()
+
+  def click(self):
+    print "click"
+    self.label_.hide()
+    self.label_alt_.show()
+    self.update()
+    QTimer.singleShot(250, self.reset)
+
+  def reset(self):
     self.label_.show()
+    self.label_alt_.hide()
+    self.update()
 
   def set_position(self,pos):
     self.move(pos[0]-self.w_/2, pos[1]-self.h_/2)
@@ -60,6 +75,7 @@ class ModulairCursor(QWidget):
 class ModularMenu(QWidget):
   signal_hide_ = QtCore.Signal()
   signal_show_ = QtCore.Signal()
+  signal_click_ = QtCore.Signal()
   # constructor
   def __init__(self):
     self.qt_app_ = QApplication(sys.argv)
@@ -92,64 +108,78 @@ class ModularMenu(QWidget):
     if rospy.has_param("/modulair/core/params/height"):
       self.height_ = rospy.get_param("/modulair/core/params/height")
     else:
-      rospy.logerr("ModulairInfobar: parameter [height] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [height] not found on server")
     # width
     if rospy.has_param("/modulair/core/params/width"):
       self.width_ = rospy.get_param("/modulair/core/params/width")
     else:
-      rospy.logerr("ModulairInfobar: parameter [width] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [width] not found on server")
     ### x ###
     if rospy.has_param("/modulair/core/params/x"):
       self.x_ = rospy.get_param("/modulair/core/params/x")
     else:
-      rospy.logerr("ModulairInfobar: parameter [x] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [x] not found on server")
     ### y ###
     if rospy.has_param("/modulair/core/params/y"):
       self.y_ = rospy.get_param("/modulair/core/params/y")
     else:
-      rospy.logerr("ModulairInfobar: parameter [y] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [y] not found on server")
     ### border scale ###
-    if rospy.has_param("/modulair/core/params/border_scale"):
-      self.border_scale_ = rospy.get_param("/modulair/core/params/border_scale")
+    if rospy.has_param("/modulair/menu/params/border_scale"):
+      self.border_scale_ = rospy.get_param("/modulair/menu/params/border_scale")
     else:
-      rospy.logerr("ModulairInfobar: parameter [border_scale] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [border_scale] not found on server")
     self.border_ = int(self.width_ * self.border_scale_)
     ### Cursor Icon ###
     if rospy.has_param("/modulair/menu/params/cursor_path"):
       self.cursor_path_ = rospy.get_param("/modulair/menu/params/cursor_path")
     else:
-      rospy.logerr("ModulairInfobar: parameter [cursor_path] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [cursor_path] not found on server")
+    ### Cursor AltIcon ###
+    if rospy.has_param("/modulair/menu/params/cursor_path_alt"):
+      self.cursor_path_alt_ = rospy.get_param("/modulair/menu/params/cursor_path_alt")
+    else:
+      rospy.logerr("ModulairAppMenu: parameter [cursor_path_alt] not found on server")
     ### Background Image ###
     if rospy.has_param("/modulair/menu/params/background_path"):
       self.background_path_ = rospy.get_param("/modulair/menu/params/background_path")
     else:
-      rospy.logerr("ModulairInfobar: parameter [background_path] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [background_path] not found on server")
     ### Application Locations ###
     if rospy.has_param("/modulair/core/available_apps"):
       self.app_paths_ = rospy.get_param("/modulair/core/available_apps")
     else:
-      rospy.logerr("ModulairInfobar: parameter [available_apps] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [available_apps] not found on server")
     ### Default App ###
     if rospy.has_param("/modulair/core/default_app"):
       self.default_app_name_ = rospy.get_param("/modulair/core/default_app")
     else:
-      rospy.logerr("ModulairInfobar: parameter [default_app] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [default_app] not found on server")
+    ### Go to screensaver ###
+    if rospy.has_param("/modulair/menu/params/screensaver"):
+      self.screensaver_ = rospy.get_param("/modulair/menu/params/screensaver")
+    else:
+      rospy.logerr("ModulairAppMenu: parameter [screensaver] not found on server")
+    if self.screensaver_ == True:
+      rospy.logwarn("ModulairAppMenu: Configured to SHOW screensaver app when all users leave")
+    else:
+      rospy.logwarn("ModulairAppMenu: Configured to NOT default to screensaver app when all users leave")
     ### Workspace Limits ###
     if rospy.has_param("/modulair/menu/params/workspace_size"):
       self.workspace_limits_ = rospy.get_param("/modulair/menu/params/workspace_size")
     else:
-      rospy.logerr("ModulairInfobar: parameter [workspace_size] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [workspace_size] not found on server")
     ### Y Offset ###
     if rospy.has_param("/modulair/menu/params/y_offset"):
       self.y_offset_ = rospy.get_param("/modulair/menu/params/y_offset")
     else:
-      rospy.logerr("ModulairInfobar: parameter [y_offset] not found on server")
+      rospy.logerr("ModulairAppMenu: parameter [y_offset] not found on server")
     ### Height Scaling ###
     if rospy.has_param("/modulair/menu/params/height_percentage"):
       self.height_perc_ = rospy.get_param("/modulair/menu/params/height_percentage")
     else:
-      rospy.logerr("ModulairInfobar: parameter [height_percentage] not found on server")
-    rospy.logwarn("ModulairInfobar: height percentage set to " + str(self.height_perc_))
+      rospy.logerr("ModulairAppMenu: parameter [height_percentage] not found on server")
+    rospy.logwarn("ModulairAppMenu: height percentage set to " + str(self.height_perc_))
     self.height_ = int(self.height_*self.height_perc_)
 
     self.bg = QWidget()
@@ -195,14 +225,14 @@ class ModularMenu(QWidget):
     self.connect(self.ok_timer_, QtCore.SIGNAL("timeout()"), self.check_ok)
     self.ok_timer_.start(15)
     # Cursor
-    self.cursor_ = ModulairCursor(self.cursor_path_,self)
+    self.cursor_ = ModulairCursor(self.cursor_path_,self.cursor_path_alt_,self)
     self.cursor_.set_position([self.width_/2,self.height_/2])
     self.cursor_.show()
     self.run_ = True
     # Hide and Show Connections
     self.signal_show_.connect(self.show_menu)
     self.signal_hide_.connect(self.hide_menu)
-
+    self.signal_click_.connect(self.cursor_.click)
 
   def check_ok(self):
     if rospy.is_shutdown():
@@ -232,7 +262,6 @@ class ModularMenu(QWidget):
       self.cur_ind_x_ += 1
     # return current grid index
     return ind_x, ind_y
-
 
   def convert_workspace(self,user_pos):
     screen_pos = []
@@ -277,7 +306,6 @@ class ModularMenu(QWidget):
       self.gridLayout_.addWidget(label, nextx, nexty )
       self.app_menu_items_[app] = label
 
-  # user_state_cb ros callback
   def user_state_cb(self, msg):
     if self.run_:
       self.current_users_ = msg.users
@@ -288,35 +316,47 @@ class ModularMenu(QWidget):
         if user.focused == True:
           self.focused_user_id_ = user.modulair_id
         self.users_[user.modulair_id] = user
-      
-      # self.update_cursor()      
     pass
   
-  # user_event_cb ros callback
   def user_event_cb(self, msg):
     if self.run_:
       ### Workspace Events ###
       if msg.event_id == 'workspace_event':
-        if msg.message == 'all_users_left':
-          rospy.logdebug("ModulairMenu: ALL_USERS_LEFT received, should start default app")
-          self.toast_pub_.publish(String('Launching Screensaver'))
-          rospy.wait_for_service('modulair/core/app_manager/close_all_apps')
-          try:
-            self.srv_close_all_apps = rospy.ServiceProxy('modulair/core/app_manager/close_all_apps',
-                                                   modulair_core.srv.close_all_apps)
-            ret_success = self.srv_close_all_apps('none')
-            # If close all apps is successful, hide menu and run default app
-            self.signal_hide_.emit()
-            rospy.wait_for_service('modulair/core/app_manager/load_app')
+        if self.screensaver_:
+          if msg.message == 'all_users_left':
+            rospy.logdebug("ModulairMenu: ALL_USERS_LEFT received, should start default app")
+            self.toast_pub_.publish(String('Launching Screensaver'))
+            rospy.wait_for_service('modulair/core/app_manager/close_all_apps')
             try:
-              self.srv_load_app = rospy.ServiceProxy('modulair/core/app_manager/load_app',
-                                                     modulair_core.srv.load_app)
-              ret_success = self.srv_load_app(self.default_app_name_)
-              self.toast_pub_.publish(String('Screensaver Running'))
+              self.srv_close_all_apps = rospy.ServiceProxy('modulair/core/app_manager/close_all_apps',
+                                                     modulair_core.srv.close_all_apps)
+              ret_success = self.srv_close_all_apps('none')
+              # If close all apps is successful, hide menu and run default app
+              self.signal_hide_.emit()
+              rospy.wait_for_service('modulair/core/app_manager/load_app')
+              try:
+                self.srv_load_app = rospy.ServiceProxy('modulair/core/app_manager/load_app',
+                                                       modulair_core.srv.load_app)
+                ret_success = self.srv_load_app(self.default_app_name_)
+                self.toast_pub_.publish(String('Screensaver Running'))
+              except rospy.ServiceException, e:
+                rospy.logerr("Service call failed: %s" % e)
             except rospy.ServiceException, e:
               rospy.logerr("Service call failed: %s" % e)
-          except rospy.ServiceException, e:
-            rospy.logerr("Service call failed: %s" % e)
+        else:
+          if msg.message == 'all_users_left':
+            rospy.logdebug("ModulairMenu: ALL_USERS_LEFT received, should close app and show menu")
+            self.toast_pub_.publish(String('Closing Apps'))
+            rospy.wait_for_service('modulair/core/app_manager/close_all_apps')
+            try:
+              self.srv_close_all_apps = rospy.ServiceProxy('modulair/core/app_manager/close_all_apps',
+                                                     modulair_core.srv.close_all_apps)
+              ret_success = self.srv_close_all_apps('none')
+              # If close all apps is successful, show menu
+              self.signal_show_.emit()
+              self.toast_pub_.publish(String('Apps Closed'))
+            except rospy.ServiceException, e:
+              rospy.logerr("Service call failed: %s" % e)
 
       ### User Events ###
       if msg.event_id == 'hand_event' and msg.user_id == self.focused_user_id_:
@@ -337,6 +377,7 @@ class ModularMenu(QWidget):
         # Click to start app  
         if all( [ msg.message == 'left_elbow_click', 
                   self.current_app_name_ != "NONE"] ):
+          self.signal_click_.emit()
           if self.hidden_ == False:
             print msg.message
             rospy.logwarn("ModulairMenu: LEFT_ELBOW_CLICK received, let's launch app")
@@ -351,6 +392,9 @@ class ModularMenu(QWidget):
               self.toast_pub_.publish(String(self.current_app_name_ + ' Running'))
             except rospy.ServiceException, e:
               rospy.logerr("Service call failed: %s" % e)
+        elif all( [ msg.message == 'left_elbow_click', 
+                  self.current_app_name_ == "NONE"] ):
+          self.signal_click_.emit()
 
   def hide_menu(self):
     self.hide()

@@ -4,14 +4,14 @@
 	<node pkg="tf" type="static_transform_publisher" name="world_to_wall" args="0 0 1.0 0 0 1.5707  /world /wall_frame 10"/>
 
 
-	<node name="static_world_to_tracker_right" pkg="tf" type="static_transform_publisher" args="2 0 2.514 -1.5707 0.7 0 /world /tracker_right_link 10" respawn="true" />
+  <!-- <node name="static_world_to_tracker_right" pkg="tf" type="static_transform_publisher" args="2 0 2.514 -1.5707 0.7 0 /world /tracker_right_link 10" respawn="true" /> -->
+  <node name="static_world_to_tracker_right" pkg="tf" type="static_transform_publisher" args="2 0 2.514 -2.6 0.7 0 /world /tracker_right_link 10" respawn="true" />
 
 	<node name="static_tracker_right_to_depth" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /tracker_right_link /tracker_right_openni_depth_frame 10" respawn="true" />
 	
 
-	
-
-	<node name="static_world_to_tracker_left" pkg="tf" type="static_transform_publisher" args="-2 0 2.514 -1.5707 0.7 0 /world /tracker_left_link 10" respawn="true" />
+  <!-- <node name="static_world_to_tracker_left" pkg="tf" type="static_transform_publisher" args="-2 0 2.514 -1.5707 0.7 0 /world /tracker_left_link 10" respawn="true" /> -->
+  <node name="static_world_to_tracker_left" pkg="tf" type="static_transform_publisher" args="-2 0 2.514 -.760 0.7 0 /world /tracker_left_link 10" respawn="true" />
 
 	<node name="static_tracker_left_to_depth" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /tracker_left_link /tracker_left_openni_depth_frame 10" respawn="true" />
 
