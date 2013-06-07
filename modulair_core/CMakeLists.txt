@@ -34,9 +34,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(_moc ${CMAKE_CURRENT_BINARY_DIR}/${_current_MOC})
 
 ## QT Wrapping
-set(modulair_core_sources src/modulair_app_base.cpp)
-set(modulair_core_headers   include/${PROJECT_NAME}/modulair_app_base.h
-							include/${PROJECT_NAME}/modulair_core.h)
+set(modulair_core_sources src/modulair_app_base.cpp
+													src/modulair_app_base_qt.cpp)
+set(modulair_core_headers include/${PROJECT_NAME}/modulair_app_base.h
+													include/${PROJECT_NAME}/modulair_app_base_qt.h)
 
 qt4_wrap_cpp(modulair_core_headers_moc ${modulair_core_headers})
 

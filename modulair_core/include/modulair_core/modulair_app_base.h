@@ -3,9 +3,9 @@
 // STD
 #include <deque>
 // QT 
-#include "QtGui"
-#include <QtGui/QApplication>
-#include <QObject>
+// #include "QtGui"
+// #include <QtGui/QApplication>
+// #include <QObject>
 // ROS
 #include <ros/ros.h>
 #include <ros/node_handle.h>
@@ -14,7 +14,6 @@
 #include <modulair_msgs/ModulairUserArray.h>
 #include <modulair_msgs/ModulairUserEvent.h>
 #include <modulair_msgs/ModulairUser.h>
-#include <modulair_core/modulair_core.h>
 // TF and EIGEN
 #include <tf_conversions/tf_eigen.h>
 
@@ -31,12 +30,12 @@ namespace modulair{
     Eigen::Vector3d jtPosBodyById(int id){ return joint_positions_[joint_names_[id]]; };
     std::string jtNameById(int id){ return joint_names_[id]; }
     int jtIdByName(std::string id){
-        for(unsigned int i=0;i<joint_names_.size();i++){
-            if(joint_names_[i] == id){
-                return i;
-            } 
-        }
-        return -1;
+      for(unsigned int i=0;i<joint_names_.size();i++){
+        if(joint_names_[i] == id){
+          return i;
+        } 
+      }
+      return -1;
     }
 
     std::map<std::string, Eigen::Vector3d> joint_positions_;
@@ -57,10 +56,11 @@ namespace modulair{
 
   typedef std::map<int,AppUser> AppUserMap;
 
-	class ModulairAppBase : public QWidget{
-		Q_OBJECT // must include to use Qt signals and slots
+  class ModulairAppBase{
+  // class ModulairAppBase : public QWidget{
+		// Q_OBJECT // must include to use Qt signals and slots
   public:
-    ModulairAppBase(QString app_name, ros::NodeHandle nh, int event_deque_size);
+    ModulairAppBase(std::string app_name, ros::NodeHandle nh, int event_deque_size);
     ~ModulairAppBase(){};
 
     void userStateCallback(const modulair_msgs::ModulairUserArrayConstPtr &user_packet);
@@ -74,10 +74,9 @@ namespace modulair{
     virtual bool stop() = 0;
     virtual bool pause() = 0;
     virtual bool resume() = 0;
+    // public Q_SLOTS:
+    // void checkRosOk();
 
-  public Q_SLOTS:
-    void checkRosOk();
-  
   private:
     bool initBaseApp();
 
@@ -86,8 +85,9 @@ namespace modulair{
     int x_,y_,width_,height_;
     double height_perc_;
     unsigned int deque_size_;
-    QString name_;
-    QString asset_path_;
+    // QString name_;
+    std::string name_;
+    // QString asset_path_;
     int num_users_, focused_user_id_;
     AppUserMap users_;
     std::vector<int> active_user_ids_;
@@ -96,14 +96,14 @@ namespace modulair{
     ros::Subscriber modulair_event_subscriber_;
     ros::Publisher debug_publisher_;
     ros::Publisher toast_publisher_;
-    QWidget tooltip_;
-    QWidget container_widget_;
-    QTimer __ros_ok_timer;
+    // QWidget tooltip_;
+    // QWidget container_widget_;
+    // QTimer __ros_ok_timer;
     modulair_msgs::ModulairUserArray current_user_packet_;
     std::vector<modulair_msgs::ModulairUser> user_data_;
     modulair_msgs::ModulairUserEvent current_user_event_;
     std::deque<modulair_msgs::ModulairUserEvent> user_event_deque_;
-	};
+  };
 
 }
 #endif

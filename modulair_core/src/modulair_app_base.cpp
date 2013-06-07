@@ -2,23 +2,25 @@
 
 namespace modulair{
 
-	ModulairAppBase::ModulairAppBase(QString app_name, ros::NodeHandle nh, int event_deque_size = 10){  
+	ModulairAppBase::ModulairAppBase(std::string app_name, ros::NodeHandle nh, int event_deque_size = 10){  
     node_ = nh;
     name_ = app_name;
     deque_size_ = event_deque_size;
     initBaseApp();
-    connect( &__ros_ok_timer, SIGNAL(timeout()), this, SLOT(checkRosOk()) );
-    __ros_ok_timer.start(15);
+    // connect( &__ros_ok_timer, SIGNAL(timeout()), this, SLOT(checkRosOk()) );
+    // __ros_ok_timer.start(15);
 
 	}
 
-  void ModulairAppBase::checkRosOk(){
-    if(!ros::ok()){
-      qApp->quit();
-    }else{
-      ros::spinOnce();
-    }
-  }
+  // void ModulairAppBase::checkRosOk(){
+  //   if(!ros::ok()){}
+
+  //   // if(!ros::ok()){
+  //   //   qApp->quit();
+  //   // }else{
+  //   //   ros::spinOnce();
+  //   // }
+  // }
 
   bool ModulairAppBase::initBaseApp(){
     // Initialize User Listeners
@@ -33,43 +35,44 @@ namespace modulair{
     // Get Container Widget Params
     if (!node_.getParam("/modulair/core/params/x", x_)){
       ROS_ERROR("Modulair%s: No x position on parameter server (namespace: %s)",
-        name_.toStdString().c_str(), node_.getNamespace().c_str());
+        name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
     if (!node_.getParam("/modulair/core/params/y", y_)){
       ROS_ERROR("Modulair%s: No y position on parameter server (namespace: %s)",
-        name_.toStdString().c_str(), node_.getNamespace().c_str());
+        name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
     if (!node_.getParam("/modulair/core/params/width", width_)){
       ROS_ERROR("Modulair%s: No width on parameter server (namespace: %s)",
-        name_.toStdString().c_str(), node_.getNamespace().c_str());
+        name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
     if (!node_.getParam("/modulair/core/params/height", height_)){
       ROS_ERROR("Modulair%s: No height on parameter server (namespace: %s)",
-        name_.toStdString().c_str(), node_.getNamespace().c_str());
+        name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
     if (!node_.getParam("/modulair/app/params/height_percentage", height_perc_)){
       ROS_ERROR("Modulair%s: No height percentage on parameter server (namespace: %s)",
-        name_.toStdString().c_str(), node_.getNamespace().c_str());
+        name_.c_str(), node_.getNamespace().c_str());
       return false;
     }
 
     ROS_WARN_STREAM("ModulairAppBase: App Dimensions are ["<<width_<<","<<height_<<"]");
     ROS_WARN_STREAM("ModulairAppBase: Height Percentage set to " << height_perc_);
+    this->height_ = int(double(height_) * height_perc_);
+    ROS_WARN_STREAM("ModulairAppBase: Height is now " <<int(double(height_) * height_perc_));
 
     // Build Container Widget
-    this->setWindowFlags(Qt::FramelessWindowHint);
-    this->setAutoFillBackground(true);
-    this->setStyleSheet("background-color:#222222;");
+    // this->setWindowFlags(Qt::FramelessWindowHint);
+    // this->setAutoFillBackground(true);
+    // this->setStyleSheet("background-color:#222222;");
 
-    ROS_WARN_STREAM("ModulairAppBase: Height is now " <<int(double(height_) * height_perc_));
-    this->move(x_,y_);
-    this->resize(width_,int(double(height_) * height_perc_));
-    this->setFocus();
-    this->show();
+    // this->move(x_,y_);
+    // this->resize(width_,int(double(height_) * height_perc_));
+    // this->setFocus();
+    // this->show();
 
     ROS_WARN_STREAM("ModulairAppBase: Set up successfully");
 
