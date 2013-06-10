@@ -97,9 +97,16 @@ class UserTag(QWidget):
     self.label_.setFont(bold_font)
     self.label_.show()
 
+
+
   def set_pos(self,xpos):
     self.move(xpos+self.parent_.wall_x_,self.y_)
     pass
+
+  #def update_mini_skel(self):
+  #  for joint in users_[this_user_id]:
+  #    joint_labels_[joint].setPosition(users_[this_user_id].joints[joint_id].getXY)
+  #  pass
 
 ################################################################################
 class ModulairInfobar(QWidget):
@@ -229,8 +236,12 @@ class ModulairInfobar(QWidget):
 
   def update_tag(self,uid):
     tag = self.user_tags_[uid]
+    # userx = self.users_[user_id].translations_mm[joint_id].x
     userx = self.users_[uid].translations_mm[2].x
-    tag.set_pos(int(self.width_/2.0)+userx*1.5)
+    tag.set_pos(int(self.width_/2.0)+userx*1.5) # todo make rosparam 
+
+    # tag.update_user(self.users_[uid])
+
     # do stuff to tag (set position, update state etc)
 
   def update_tags(self):
