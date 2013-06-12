@@ -73,9 +73,26 @@ class UserTag(QWidget):
     self.mode_ = 'MINIMIZED'
     self.parent_ = parent
 
+    self.joints_ = {
+    'head' : 0, 'neck' : 1, 'torso' : 2, 'right_shoulder' : 3,
+    'left_shoulder' : 4, 'right_elbow' : 5, 'left_elbow' : 6, 
+    'right_hand' : 7, 'left_hand' : 8, 'right_hip' : 9, 
+    'left_hip' : 10, 'right_knee' : 11, 'left_knee' : 12,
+    'right_foot' : 13, 'left_foot' : 14
+    }
+    self.joint_labels_ = {}
+    self.create_joint_labels()
+
+    if rospy.has_param("/modulair/menu/params/workspace_size"):
+      self.workspace_limits = rospy.get_param("/modulair/menu/params/workspace_size")
+    else:
+      self.rospy.logerr("ModulairInfobar: parameter [workspace_size] not found on server")
+
     self.height_ = int(self.parent_height_ * 3)
     self.width_ = int(self.parent_width_ * 0.05)
     self.y_ = int(self.parent_.wall_height_ - self.parent_height_ * 3)
+    self.x_factor = abs(self.workspace_limits[0] - self.workspace_limits[1]) // self.width_ + 2
+    self.y_factor = abs(self.workspace_limits[2] - self.workspace_limits[3]) // self.height_ + 2
 
     self.resize(self.width_, self.height_)
     self.move(int(self.parent_width_/2.0),self.y_)
@@ -85,28 +102,40 @@ class UserTag(QWidget):
     self.setAutoFillBackground(True)
     self.show()
 
-    bold_font = QFont()
-    bold_font.setBold(True)
-    bold_font.setPixelSize(self.height_ * 0.15)
-
-    self.label_ = QLabel("USER " + str(uid), self)
-    self.label_.resize(self.width_, self.height_)
-    self.label_.setStyleSheet("background-color:#ffffff;color:#222222")
-    self.label_.setAutoFillBackground(True)
-    self.label_.setAlignment(QtCore.Qt.AlignCenter)
-    self.label_.setFont(bold_font)
-    self.label_.show()
+  def create_joint_labels(self):
+    for name in self.joints_.keys():
+      joint_label = QLabel()
+      joint_label.resize(18, 18)
+      joint_label.setStyleSheet("background-color:#00ff00")
+      joint_label.setAutoFillBackground(True)
+      self.joint_labels_[name] = joint_label
+    pass
 
 
+  def get_joint(self, name):
+    return self.parent_.users_[self.uid_].translations_mm[self.joints_[name]]
 
-  def set_pos(self,xpos):
+  def update_mini_skel(self, xpos):
+    for j_name, j_id in self.joints_.items():
+      joint_x = self.get_joint(j_name).x
+      joint_y = self.get_joint(j_name).y
+      joint_lbl = self.joint_labels_[j_name]
+      self.draw_joint_lbl(j_id, -joint_x, -joint_y, joint_lbl)
+
+    head = self.get_joint('head')
+    #self.move((head.x // self.x_factor) + 130, (head.y // self.y_factor) + 130)
     self.move(xpos+self.parent_.wall_x_,self.y_)
     pass
 
-  #def update_mini_skel(self):
-  #  for joint in users_[this_user_id]:
-  #    joint_labels_[joint].setPosition(users_[this_user_id].joints[joint_id].getXY)
-  #  pass
+  def hide_mini_skel(self):
+    for label in self.joint_labels_.values():
+      label.hide()
+
+  def draw_joint_lbl(self, id, xpos, ypos, label):
+    label.setParent(self)
+    label.move((xpos // self.x_factor) + 130, (ypos // self.y_factor) + 130)
+    label.show()
+    pass
 
 ################################################################################
 class ModulairInfobar(QWidget):
@@ -238,7 +267,8 @@ class ModulairInfobar(QWidget):
     tag = self.user_tags_[uid]
     # userx = self.users_[user_id].translations_mm[joint_id].x
     userx = self.users_[uid].translations_mm[2].x
-    tag.set_pos(int(self.width_/2.0)+userx*1.5) # todo make rosparam 
+    #tag.set_pos(int(self.width_/2.0)+userx*1.5) # todo make rosparam
+    tag.update_mini_skel(int(self.width_/2.0)+userx*1.5) 
 
     # tag.update_user(self.users_[uid])
 
@@ -264,7 +294,7 @@ class ModulairInfobar(QWidget):
     # Remove tags without users
     for tag in tags_to_remove:
       rospy.logwarn("ModulairInfobar: Lost [user " + str(tag) + "], cleaning up tag")
-      self.user_tags_[tag].label_.hide()
+      self.user_tags_[tag].hide_mini_skel()
       self.user_tags_[tag].hide()
       del(self.user_tags_[tag])
 
