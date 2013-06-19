@@ -58,6 +58,7 @@ class User():
     self.transforms_merged_ = []
     self.translations_ = {}
     self.translations_merged = []
+    self.confs_merged_ = []
     self.merged_transform_exists_ = []
     self.tracker_transform_exists_ = {}
     self.current_state_msg = user_msg()
@@ -137,6 +138,7 @@ class User():
                         OneEuroFilter(self.run_frequency_,self.filter_mincutoff_,self.filter_beta_,self.filter_dcutoff_)]]*len(self.frame_names_)
       self.translation_timestamps_ = [[0.0,0.0,0.0]]*len(self.frame_names_)
       self.transforms_merged_ = [Transform()]*len(self.frame_names_)
+      self.confs_merged_ = [0]*len(self.frame_names_)
       self.translations_merged_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
       self.translations_merged_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
       self.translations_merged_body_mm_ = [Vector3(0.0,0.0,0.0)]*len(self.frame_names_)
@@ -151,21 +153,25 @@ class User():
         # multiple tracker frames to move
         best_conf = 0.0
         best_tracker = ''
-        for tracker,packet in self.tracker_packets_.items():
+        for tracker, packet in self.tracker_packets_.items():
           if packet.confs[index] > best_conf:
             best_conf = packet.confs[index]
             best_tracker = tracker
         if self.tracker_transform_exists_[tracker_id][index] == True:
           self.transforms_merged_[index] = self.transforms_[best_tracker][index]
           self.translations_merged_[index] = self.translations_[best_tracker][index]
+          # Set merged conf to best from all trackers
+          self.confs_merged_[index] = best_conf
           self.merged_transform_exists_[index] = True
         else:
           self.merged_transform_exists_[index] = False
       else:
-        tracker_id = self.tracker_uids_.keys()[0] # first and only tracker
-        if self.tracker_transform_exists_[tracker_id][index] == True:
-          self.transforms_merged_[index] = self.transforms_[tracker_id][index]
-          self.translations_merged_[index] = self.translations_[tracker_id][index]
+        single_tracker_id = self.tracker_uids_.keys()[0] # first and only tracker
+        if self.tracker_transform_exists_[single_tracker_id][index] == True:
+          self.transforms_merged_[index] = self.transforms_[single_tracker_id][index]
+          self.translations_merged_[index] = self.translations_[single_tracker_id][index]
+          # set merged conf to single tracker conf
+          self.confs_merged_[index] = self.tracker_packets_[single_tracker_id].confs[index]
           self.merged_transform_exists_[index] = True
         else:
           self.merged_transform_exists_[index] = False
@@ -430,6 +436,7 @@ class User():
     msg = user_msg()
     msg.modulair_id = self.mid_
     msg.frame_names = self.frame_names_
+    msg.frame_confs = self.confs_merged_
 
     msg.transforms = self.transforms_merged_
     msg.translations = self.translations_merged_

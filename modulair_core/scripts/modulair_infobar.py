@@ -91,22 +91,23 @@ class UserTag(QWidget):
     self.height_ = int(self.parent_height_ * 3)
     self.width_ = int(self.parent_width_ * 0.05)
     self.y_ = int(self.parent_.wall_height_ - self.parent_height_ * 3)
-    self.x_factor = abs(self.workspace_limits[0] - self.workspace_limits[1]) // self.width_ + 2
-    self.y_factor = abs(self.workspace_limits[2] - self.workspace_limits[3]) // self.height_ + 2
+    self.x_ratio = abs(self.workspace_limits[0] - self.workspace_limits[1]) // self.width_ - 3#MURICA
+    self.y_ratio = abs(self.workspace_limits[2] - self.workspace_limits[3]) // self.height_ + 2
 
     self.resize(self.width_, self.height_)
     self.move(int(self.parent_width_/2.0),self.y_)
     self.setStyleSheet("background-color:#ffffff;color:#222222")
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-    # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
+    #self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
     self.setAutoFillBackground(True)
     self.show()
 
   def create_joint_labels(self):
     for name in self.joints_.keys():
       joint_label = QLabel()
-      joint_label.resize(18, 18)
-      joint_label.setStyleSheet("background-color:#00ff00")
+      joint_label.resize(16, 16)
+      circle_region = QRegion(QRect(0, 0, 14, 14), QRegion.Ellipse)
+      joint_label.setMask(circle_region)
       joint_label.setAutoFillBackground(True)
       self.joint_labels_[name] = joint_label
     pass
@@ -115,25 +116,40 @@ class UserTag(QWidget):
   def get_joint(self, name):
     return self.parent_.users_[self.uid_].translations_mm[self.joints_[name]]
 
+  def get_confidence(self,jid):
+    return self.parent_.users_[self.uid_].frame_confs[jid]
+
   def update_mini_skel(self, xpos):
+    self.activateWindow()
     for j_name, j_id in self.joints_.items():
       joint_x = self.get_joint(j_name).x
       joint_y = self.get_joint(j_name).y
+      torso_x = self.get_joint('torso').x
       joint_lbl = self.joint_labels_[j_name]
-      self.draw_joint_lbl(j_id, -joint_x, -joint_y, joint_lbl)
+      self.draw_joint_lbl(j_id, torso_x, joint_x, -joint_y, joint_lbl)
 
-    head = self.get_joint('head')
-    #self.move((head.x // self.x_factor) + 130, (head.y // self.y_factor) + 130)
     self.move(xpos+self.parent_.wall_x_,self.y_)
     pass
 
   def hide_mini_skel(self):
     for label in self.joint_labels_.values():
       label.hide()
+    pass
 
-  def draw_joint_lbl(self, id, xpos, ypos, label):
+  def draw_joint_lbl(self, jid, xtorso, xpos, ypos, label):
+    confidence = self.get_confidence(jid)
+    if jid > self.joints_['left_hip'] or confidence == 1.0:
+      label.setStyleSheet("background-color:#00ff00")
+    elif confidence == 0.0:
+      label.setStyleSheet("background-color:#ff0000")
+    else:
+      label.setStyleSheet("background-color:#ffa500")
     label.setParent(self)
-    label.move((xpos // self.x_factor) + 130, (ypos // self.y_factor) + 130)
+    x_torso = (xtorso // self.x_ratio)
+    x_cord = (xpos // self.x_ratio) - 8
+    y_cord = (ypos // self.y_ratio) + 100
+    x_anchor = x_cord - x_torso + (self.width_ // 2)
+    label.move(x_anchor, y_cord)
     label.show()
     pass
 
