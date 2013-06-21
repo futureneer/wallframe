@@ -1,0 +1,15 @@
+<package>
+  <description brief="modulair_appmaker">
+
+     modulair_appmaker
+
+  </description>
+  <author>Cesar Hernandez</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/modulair_appmaker</url>
+  <depend package="rospy"/>
+  <depend package="modulair_core"/>
+</package>
+
+
