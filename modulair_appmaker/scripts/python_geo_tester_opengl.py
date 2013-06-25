@@ -68,27 +68,10 @@ class PythonAppWidget(ModulairAppWidget):
   
   def __init__(self, name, app):
     super(PythonAppWidget, self).__init__(name, app)
-    self.glWidget = GLQuad()
+    self.glWidget = GLQuad(200, 200, 100, 100, None)
     mainLayout = QtGui.QGridLayout()
     mainLayout.addWidget(self.glWidget)
     self.setLayout(mainLayout)
-
-    self.signal_update_rotation.connect(self.update_rotation)
-    pass
-
-  def update_rotation(self):
-    self.glWidget.setXRotation(self.rot_x_)
-    self.glWidget.setYRotation(self.rot_y_)
-    pass
-
-  def user_state_cb(self, msg):
-    self.current_users_ = msg.users
-
-    if len(self.current_users_) > 0:
-      self.current_users_ = msg.users
-      self.rot_y_ = self.current_users_[0].translations_mm[8].x / 1.0
-      self.rot_x_ = ((self.current_users_[0].translations_mm[8].y - 200) / 1.0)
-      self.signal_update_rotation.emit()
     pass
 
 if __name__ == '__main__':

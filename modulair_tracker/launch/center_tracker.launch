@@ -2,7 +2,7 @@
 <launch>
 
 	<arg name="tracker_name" default="tracker_center" />
-	<arg name="tracker_id" default="#3" />
+	<arg name="tracker_id" default="#1" />
 	<!-- <arg name="tracker_bus_id" default="001@15"/> -->
 
 	<!-- <include file="$(find openni_launch)/launch/openni.launch">

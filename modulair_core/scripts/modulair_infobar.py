@@ -147,7 +147,7 @@ class UserTag(QWidget):
     label.setParent(self)
     x_torso = (xtorso // self.x_ratio)
     x_cord = (xpos // self.x_ratio) - 8
-    y_cord = (ypos // self.y_ratio) + 100
+    y_cord = (ypos // self.y_ratio) + 130
     x_anchor = x_cord - x_torso + (self.width_ // 2)
     label.move(x_anchor, y_cord)
     label.show()
