@@ -1,0 +1,16 @@
+<!-- WallFrameTracker Launch File -->
+<launch>
+  <!-- Set parameters -->
+  <arg name="tracker_name" default="tracker" />
+  <arg name="tracker_id" default="#3" />
+  <!-- XnSensorServer Cleanup Helper -->
+  <node name="XnSensorServerKillerNode" output="screen" pkg="modulair_tracker" type="modulair_tracker_node" launch-prefix="bash $(find modulair_tracker)/xn_sensor_server_cleanup.sh" />
+  <!-- The Tracker node using the tracker parameters -->
+  <node name="tracker1" output="screen" pkg="modulair_tracker" type="modulair_tracker_node" >
+    <param name="device_id" type="str" value="$(arg tracker_id)" />
+    <param name="tf_prefix" value="tracker" />
+    <param name="relative_frame" value="/wall_frame" />
+  </node>
+  <!-- TF alignment file -->
+  <include file="$(find modulair_tracker)/launch/wallframe_tracker_alignment.launch"/>
+</launch>

@@ -64,8 +64,6 @@ class PythonGeoTester():
 
 class PythonAppWidget(ModulairAppWidget):
   
-  signal_update_rotation = QtCore.Signal()
-  
   def __init__(self, name, app):
     super(PythonAppWidget, self).__init__(name, app)
     self.glWidget = GLQuad(200, 200, 100, 100, None)
