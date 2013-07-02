@@ -10,17 +10,20 @@ from PySide import QtGui
 #### Modulair Core Imports ###
 import modulair_core
 from modulair_core import ModulairAppWidget
-import learning_opengl4_1
-from learning_opengl4_1 import Triangle
+import learning_opengl4_4
+from learning_opengl4_4 import Cube
 
 class Tester(ModulairAppWidget):
   def __init__(self, name, app):
     super(Tester, self).__init__(name, app)
-    self.glWidget = Triangle()
+    self.glWidget = Cube()
     mainLayout = QtGui.QGridLayout()
     mainLayout.addWidget(self.glWidget)
     self.setLayout(mainLayout)
     pass
+
+  def mouseMoveEvent(self, event):
+    self.glWidget.updateGL()
 
 if __name__ == '__main__':
   rospy.init_node("learning_opengl4_tester", anonymous=True)

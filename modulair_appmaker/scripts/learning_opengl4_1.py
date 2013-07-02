@@ -70,7 +70,6 @@ class Triangle(QGLWidget):
     pass
 
   def paintGL(self):
-    # rospy.logwarn("DOING SHIT")
     # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     try:
       self.vbo.bind()
@@ -79,6 +78,8 @@ class Triangle(QGLWidget):
         glEnableClientState(GL_COLOR_ARRAY)
         glVertexPointer(3, GL_FLOAT, 24, self.vbo)
         glColorPointer(3, GL_FLOAT, 24, self.vbo + 12)
+        # glPointSize(50)
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
         glDrawArrays(GL_TRIANGLES, 0, 3)
       finally:
         self.vbo.unbind()
@@ -89,7 +90,6 @@ class Triangle(QGLWidget):
     pass
 
   def resizeGL(self, length, width):
-    rospy.logwarn("DOING SHIT11")
     glViewport(0, 0, length, width)
     pass
 
@@ -123,6 +123,8 @@ class Triangle(QGLWidget):
     # if check_error_value != GL_NO_ERROR:
     #   rospy.logerr(self.name_ + "Could not create VBO")
     #   sys.exit(1)
+
+
     self.vbo = vbo.VBO(
       numpy.array([
         [-0.8, -0.8, 0.0, 1.0, 0.0, 0.0],
