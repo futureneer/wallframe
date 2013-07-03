@@ -144,7 +144,7 @@ class Cube(QGLWidget):
 
   def initializeGL(self):
     glClearColor(0.0, 0.0, 0.0, 0.0)
-
+  
     glEnable(GL_DEPTH_TEST)
     glDepthFunc(GL_LESS)
 
@@ -153,15 +153,17 @@ class Cube(QGLWidget):
     glFrontFace(GL_CCW)
 
     self.model_matrix = Tools3D.get_identity()
-    # rospy.logwarn("INIT: Model Matrix: "+str(self.model_matrix))
     self.projection_matrix = Tools3D.get_identity()
-    # rospy.logwarn("INIT: Projection Matrix: "+str(self.projection_matrix))
     self.view_matrix = Tools3D.get_identity()
-    # rospy.logwarn("INIT: View Matrix: "+str(self.view_matrix))
     self.view_matrix = Tools3D.translate_matrix(self.view_matrix, 0, 0, -2)
-    # rospy.logwarn("INIT: View Matrix: "+str(self.view_matrix))
 
     self.create_cube()
+
+    self.timer = QtCore.QTimer()
+    self.timer.timeout.connect(self.updateGL)
+    self.timer.start(0)
+    
+    rospy.logwarn("INIT")
     pass
 
   def paintGL(self):
@@ -172,23 +174,12 @@ class Cube(QGLWidget):
 
   def resizeGL(self, length, width):
     glViewport(0, 0, length, width)
-    # rospy.logwarn("RESIZE: Projection Matrix: "+str(self.projection_matrix))
     self.projection_matrix = Tools3D.create_projection_matrix(60, length / width, 1.0, 100.0)
-    # rospy.logwarn("RESIZE: Projection Matrix: "+str(self.projection_matrix))
     glUseProgram(self.shader)
     glUniformMatrix4fv(self.projection_matrix_uni_loc, 1, GL_FALSE, self.projection_matrix)
     glUseProgram(0)
+    rospy.logwarn("RES")
     pass
-
-  # def closeEvent(self, event):
-  #   glDetachShader(self.shader, self.vertex_shader)
-  #   glDetachShader(slef.shader, self.fragment_shader)
-  #   glDeleteShader(self.vertex_shader)
-  #   glDeleteShader(self.fragment_shader)
-  #   glDeleteProgram(self.shader)
-  #   self.indices.delete()
-  #   self.verties.delete()
-  #   event.accept()
 
   def create_cube(self):
     self.verties = vbo.VBO(
@@ -233,7 +224,7 @@ class Cube(QGLWidget):
       void main(void)
       {
         gl_Position = (projection_matrix * view_matrix * model_matrix) * in_Position;
-        ex_Color = in_Color;
+        ex_Color = in_Position;
       }
       """, GL_VERTEX_SHADER)
 
@@ -250,35 +241,39 @@ class Cube(QGLWidget):
       """, GL_FRAGMENT_SHADER)
 
     self.shader = shaders.compileProgram(self.vertex_shader, self.fragment_shader)
-    # glUseProgram(self.shader)
 
     self.model_matrix_uni_loc = glGetUniformLocation(self.shader, "model_matrix")
     self.view_matrix_uni_loc = glGetUniformLocation(self.shader, "view_matrix")
     self.projection_matrix_uni_loc = glGetUniformLocation(self.shader, "projection_matrix")
+
+    rospy.logwarn("MAKE")
     pass
 
-  def destroy_cube(self):
-    pass
+  def clean_up(self):
+    self.timer.stop()
+    rospy.logwarn("DOOOOOOOOOOONE")
+    # glDetachShader(self.shader, self.vertex_shader)
+    # glDetachShader(slef.shader, self.fragment_shader)
+    # glDeleteShader(self.vertex_shader)
+    # glDeleteShader(self.fragment_shader)
+    # glDeleteProgram(self.shader)
+    # self.indices.delete()
+    # self.verties.delete()
+
 
   def draw_cube(self):
     self.now = time.clock()
-    # rospy.logwarn("TIME: "+str(self.now))
 
     if self.last_time == 0:
       self.last_time = self.now
 
     self.cube_rotation += 45.0 * float(self.now - self.last_time)
-    # rospy.logwarn("ROT: "+str(self.cube_rotation))
     self.cube_angle = math.radians(self.cube_rotation)
-    # rospy.logwarn("ANGLE: "+str(self.cube_angle))
     self.last_time = self.now
 
     self.model_matrix = Tools3D.get_identity()
-    # rospy.logwarn("PAINT: Model Matrix i: "+str(self.model_matrix))
     self.model_matrix = Tools3D.rotate_about_y(self.model_matrix, self.cube_angle)
-    # rospy.logwarn("PAINT: Model Matrix y: "+str(self.model_matrix))
     self.model_matrix = Tools3D.rotate_about_x(self.model_matrix, self.cube_angle)
-    # rospy.logwarn("PAINT: Model Matrix x: "+str(self.model_matrix))
 
     glUseProgram(self.shader)
 
@@ -293,13 +288,15 @@ class Cube(QGLWidget):
         glEnableClientState(GL_COLOR_ARRAY)
         glVertexPointer(4, GL_FLOAT, 32, self.verties)
         glColorPointer(4, GL_FLOAT, 32, self.verties + 16)
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, self.indices)
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, None)
       finally:
+        # rospy.logwarn("CLEANUP")
         self.verties.unbind()
         self.indices.unbind()
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_COLOR_ARRAY)
-        pass
     finally:
-      glUseProgram(0)   
+      # rospy.logwarn("cleanup")
+      glUseProgram(0)
+    rospy.logwarn("DRAW")
     pass

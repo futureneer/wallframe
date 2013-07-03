@@ -22,12 +22,15 @@ class Cross(QGLWidget):
     pass
 
   def initializeGL(self):
-    self.create_shader()
+    # self.create_shader()
     self.create_vbo()
+    self.create_shader()
+    
     glClearColor(0.0, 0.0, 0.0, 0.0)
     pass
 
-  def paintGL(self):
+  def paintGL(self):    
+    rospy.logwarn("DONE")
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     try:
       self.vertices.bind()
