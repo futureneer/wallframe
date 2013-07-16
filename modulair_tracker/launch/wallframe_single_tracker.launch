@@ -2,7 +2,7 @@
 <launch>
   <!-- Set parameters -->
   <arg name="tracker_name" default="tracker" />
-  <arg name="tracker_id" default="#3" />
+  <arg name="tracker_id" default="#1" />
   <!-- XnSensorServer Cleanup Helper -->
   <node name="XnSensorServerKillerNode" output="screen" pkg="modulair_tracker" type="modulair_tracker_node" launch-prefix="bash $(find modulair_tracker)/xn_sensor_server_cleanup.sh" />
   <!-- The Tracker node using the tracker parameters -->

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys
+import os
+import re
 import math
-import glob
-import inspect
 
 from PySide import QtCore, QtGui, QtOpenGL
 from PySide.QtCore import QTimer
@@ -10,6 +10,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from Image import *
+import rospy
 
 TYPES = set(['Cube','Triangle','Rectangle'])
 
@@ -23,7 +24,8 @@ TYPES = set(['Cube','Triangle','Rectangle'])
 
 class Object(object):	
 	def __init__(self):
-		super(Object, self).__init__()		
+		super(Object, self).__init__()
+		pass
 
 	def makeCommandList(self):
 		pass
@@ -61,7 +63,7 @@ class Triangle(object):
 		genList = glGenLists(1)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 		glLoadIdentity()
-		glTranslate(self.cord[0], self.cord[1], -100.0)
+		glTranslate(self.cord[0], self.cord[1], -3)
 
 		glBegin(GL_TRIANGLES)
 
@@ -76,10 +78,6 @@ class Triangle(object):
 		if self.textureNeeded:
 			glTexCoord2f(1.0, 1.0)
 		glVertex3f(1.0, 1.0, 1.0)
-
-		# if self.textureNeeded:
-		# 	glTexCoord2f(1.0, 0.0)
-		# glVertex3f(-1.0, 1.0, 1.0)
 
 		glEnd()
 
@@ -116,7 +114,8 @@ class Rectangle(object):
 		self.cord = []
 		self.dim = []
 		self.textureNeeded = 0
-		self.texture = 0
+		self.textureIndex = 0
+		self.textures = []
 		self.obj = 0		
 		pass
 
@@ -129,7 +128,7 @@ class Rectangle(object):
 		glTranslate(self.cord[0]-0.5, self.cord[1], -3)
 
 		if self.textureNeeded:
-			glBindTexture(GL_TEXTURE_2D, self.texture)
+			glBindTexture(GL_TEXTURE_2D, self.textures[textureIndex])
 
 		glBegin(GL_QUADS)
 
@@ -163,19 +162,32 @@ class Rectangle(object):
 		self.obj = self.makeCommandList()		
 		pass
 
-	def loadTexture(self, fileName):
-		self.textureNeeded = 1
-		self.image = open(fileName)
-		self.ix = self.image.size[0]
-		self.iy = self.image.size[1]
-		self.image = self.image.tostring("raw", "RGBX", 0, -1)
+	# def loadTextures(self, file_path):
+	# 	self.textureNeeded = 1
+	# 	self.image = open(fileName)
+	# 	self.ix = self.image.size[0]
+	# 	self.iy = self.image.size[1]
+	# 	self.image = self.image.tostring("raw", "RGBX", 0, -1)
 
-		# Create Texture
-		glGenTextures(1, self.texture)
-		glBindTexture(GL_TEXTURE_2D, self.texture)
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
-		glTexImage2D(GL_TEXTURE_2D, 0, 3 , self.ix, self.iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.image)
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)				
+	# 	# Create Texture
+	# 	glGenTextures(1, self.texture)
+	# 	glBindTexture(GL_TEXTURE_2D, self.texture)
+	# 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+	# 	glTexImage2D(GL_TEXTURE_2D, 0, 3 , self.ix, self.iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.image)
+	# 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)				
+	# 	pass
+
+	def loadTextures(self, images, raw_images):
+		for tex in range(0, len(images)):
+			img_x = images[tex].size[0]
+			img_y = images[tex].size[1]
+
+			self.textures.append(glGenTextures(1))
+			glBindTexture(GL_TEXTURE_2D, self.textures[tex])
+
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+			glTexImage2D(GL_TEXTURE_2D, 0, 3, img_x, img_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_images[tex])
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 		pass
 
 	def draw(self):
@@ -188,3 +200,7 @@ class Rectangle(object):
 		self.object = self.makeCommandList()
 		self.draw()
 		pass
+
+	def set_texture_index(self, index):
+		rospy.logwarn("NEW INDEX: " + str(index))
+		self.texture_index = index

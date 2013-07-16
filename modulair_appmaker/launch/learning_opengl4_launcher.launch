@@ -1,3 +1,0 @@
-<launch>
-  <node pkg="modulair_appmaker" name="python_learning_opengl4" type="learning_opengl4_test_launcher.py" />
-</launch>

@@ -1,3 +1,0 @@
-<launch>
-  <node pkg="modulair_appmaker" name="python_geo_tester_opengl" type="python_geo_tester_opengl.py" />
-</launch>

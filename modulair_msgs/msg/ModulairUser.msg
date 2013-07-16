@@ -13,6 +13,8 @@ bool leaving
 bool joined
 bool hands_together
 bool hands_on_head
+bool left_hand_on_head
+bool right_hand_on_head
 bool right_elbow_click
 bool left_elbow_click
 bool right_in_front

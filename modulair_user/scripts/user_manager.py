@@ -313,16 +313,26 @@ class User():
       self.current_state_msg.hands_on_head = True
     else:
       self.current_state_msg.hands_on_head = False
+      # Left Hand on Head
+      if self.check_joint_dist(self.head_limit_, 'left_hand', 'head'):
+        self.current_state_msg.right_hand_on_head = True
+      else:
+        self.current_state_msg.right_hand_on_head = False
+      # Right Hand on Head
+      if self.check_joint_dist(self.head_limit_, 'right_hand', 'head'):
+        self.current_state_msg.left_hand_on_head = True
+      else:
+        self.current_state_msg.left_hand_on_head = False
     # Right Elbow Click
     if self.check_joint_dist(self.hand_limit_,'left_hand','right_elbow'):
-      self.current_state_msg.right_elbow_click = True
-    else:
-      self.current_state_msg.right_elbow_click = False
-    # Left Elbow Click
-    if self.check_joint_dist(self.hand_limit_,'right_hand','left_elbow'):
       self.current_state_msg.left_elbow_click = True
     else:
       self.current_state_msg.left_elbow_click = False
+    # Left Elbow Click
+    if self.check_joint_dist(self.hand_limit_,'right_hand','left_elbow'):
+      self.current_state_msg.right_elbow_click = True
+    else:
+      self.current_state_msg.right_elbow_click = False
     # Right Hand Front 
     if self.joint_body_pos('right_hand').y > self.joint_body_pos('left_hand').y:
       self.current_state_msg.right_in_front = True
@@ -383,6 +393,14 @@ class User():
             msg.message = 'hands_on_head'
             self.state__ = 'HANDS_HEAD'
             break
+        if self.current_state_msg.left_hand_on_head:
+            msg.message = 'left_hand_on_head'
+            self.state__ = 'LEFT_HAND_ON_HEAD'
+            break
+        if self.current_state_msg.right_hand_on_head:
+            msg.message = 'right_hand_on_head'
+            self.state__ = 'RIGHT_HAND_ON_HEAD'
+            break
         if self.current_state_msg.hands_together:
           msg.message = 'hands_together'
           self.state__ = 'HANDS_TOGETHER'
@@ -415,6 +433,16 @@ class User():
           self.state__ = 'IDLE'
           break
         break
+
+      if case('LEFT_HAND_ON_HEAD'):
+        if not self.check_joint_dist(self.head_limit_, 'left_hand', 'head'):
+          self.state__ = 'IDLE'
+          break
+
+      if case('RIGHT_HAND_ON_HEAD'):
+        if not self.check_joint_dist(self.head_limit_, 'right_hand', 'head'):
+          self.state__ = 'IDLE'
+          break
 
       if case('RIGHT_ELBOW_CLICK'):
         if not self.current_state_msg.right_elbow_click:
