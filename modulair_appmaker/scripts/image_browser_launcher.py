@@ -11,7 +11,7 @@ from PySide import QtGui
 import modulair_core
 from modulair_core import ModulairAppWidget
 ### Browser Imports ###
-from sample import GLWidget
+from image_browser import GLWidget
 
 class Tester(ModulairAppWidget):
 
@@ -31,22 +31,16 @@ class Tester(ModulairAppWidget):
     self.signal_prev_image.connect(self.glWidget.prev_image)
     pass
 
-  def user_state_cb(self, msg):
-    self.current_users_ = msg.users
+  def user_event_cb(self, msg):
+    self.current_user_event_ = msg
 
-
-    if len(self.current_users_) > 0:
-      self.current_users_ = msg.users
-
-      if self.current_users_[0].left_hand_on_head:
-        self.signal_prev_image.emit()
-      elif self.current_users_[0].right_hand_on_head:
-        self.signal_next_image.emit()
+    if msg.message == 'left_hand_on_head':
+      rospy.logwarn("LEFT")
+      self.signal_prev_image.emit()
+    elif msg.message == 'right_hand_on_head':
+      rospy.logwarn("RIGHT")
+      self.signal_next_image.emit()
     pass
-
-  def clean_up(self):
-    rospy.logwarn(self.name_ + ": App Widget Cleaning up")
-    self.glWidget.clean_up()
 
 if __name__ == '__main__':
   rospy.init_node("learning_opengl4_tester", anonymous=True)

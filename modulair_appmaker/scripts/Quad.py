@@ -128,7 +128,7 @@ class Rectangle(object):
 		glTranslate(self.cord[0]-0.5, self.cord[1], -3)
 
 		if self.textureNeeded:
-			glBindTexture(GL_TEXTURE_2D, self.textures[textureIndex])
+			glBindTexture(GL_TEXTURE_2D, self.textures[self.textureIndex])
 
 		glBegin(GL_QUADS)
 
@@ -178,10 +178,10 @@ class Rectangle(object):
 	# 	pass
 
 	def loadTextures(self, images, raw_images):
+		self.textureNeeded = 1
 		for tex in range(0, len(images)):
 			img_x = images[tex].size[0]
-			img_y = images[tex].size[1]
-
+			img_y = images[tex].size[1]			
 			self.textures.append(glGenTextures(1))
 			glBindTexture(GL_TEXTURE_2D, self.textures[tex])
 
@@ -197,10 +197,15 @@ class Rectangle(object):
 		pass
 
 	def update(self):	
-		self.object = self.makeCommandList()
+		self.obj = self.makeCommandList()
 		self.draw()
 		pass
 
 	def set_texture_index(self, index):
-		rospy.logwarn("NEW INDEX: " + str(index))
-		self.texture_index = index
+		# rospy.logwarn("NEW INDEX: " + str(index))
+		self.textureIndex = index
+		pass
+
+	def get_texture_index(self):
+		return self.textureIndex
+		pass

@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="modulair_appmaker" name="video_browser" type="model_browser_launcher.py" />
+</launch>
