@@ -11,7 +11,7 @@ from PySide import QtGui
 import modulair_core
 from modulair_core import ModulairAppWidget
 ### Browser Imports ###
-from model_browser import GLWidget
+from model_browser_3 import GLWidget
 
 class Tester(ModulairAppWidget):
 
@@ -19,11 +19,22 @@ class Tester(ModulairAppWidget):
 
 		super(Tester, self).__init__(name, app)
 
-		self.glWidget = GLWidget()
+		# name = '/home/kel/modulair/modulair_appmaker/scripts/models/cube.stl'
+
+		self.glWidget = GLWidget(int(self.width_), int(self.height_ * self.height_perc_))
+		# self.glWidget.updateGL()
+		# self.glWidget.render(name)
 		mainLayout = QtGui.QGridLayout()
 		mainLayout.addWidget(self.glWidget)
 		self.setLayout(mainLayout)
 		pass
+
+	# def render(self, filename):
+	# 	self.glWidget.load_model(filename)
+	# 	pass
+
+	def clean_up(self):
+		self.glWidget.clean_up()
 
 if __name__ == '__main__':
 	rospy.init_node("model browser", anonymous = True)

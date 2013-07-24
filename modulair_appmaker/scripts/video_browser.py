@@ -77,6 +77,14 @@ class GLWidget(QGLWidget):
 
 	def send_next_frame(self):
 		image = cv.QueryFrame(self.capture)
+		if image == None:
+			# Stop the video
+			# self.timer.stop()
+			# rospy.logwarn("VIDEO FINISHED")
+			
+			# Put the video on replay:
+			self.capture = cv.CaptureFromFile("/home/kel/modulair/modulair_appmaker/scripts/vids/random.avi")
+			return
 		image_size = cv.GetSize(image)
 		cv.Flip(image, None, 0)
 		# cv.CvtColor(image, image, cv.CV_BGR2RGB)

@@ -1,53 +1,61 @@
 #!/usr/bin/env python
 
 import struct
+import rospy
 
 from PySide.QtCore import QTimer
 from PySide.QtOpenGL import QGLWidget
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from OpenGL.GLUT import *
 
 class GLWidget(QGLWidget):
 
 	def __init__(self, parent=None):
 		QGLWidget.__init__(self, parent)
 		self.model1 = Loader()
-		self.model1.load_stl("/home/kel/modulair/modulair_appmaker/scripts/models/MR.stl")
+		self.model1.load_stl("/home/kel/modulair/modulair_appmaker/scripts/models/cube.stl")
 		# self.init_shading()
 		pass
 
 	def initializeGL(self):
 		glShadeModel(GL_SMOOTH)
-		glClearColor(0.0, 0.0, 0.0, 0.0)
+		glClearColor(1.0, 1.0, 1.0, 1.0)
 		glClearDepth(1.0)
 		glEnable(GL_DEPTH_TEST)
-		glShadeModel(GL_SMOOTH)
+		glShadeModel(GL_SMOOTH) 
 		glDepthFunc(GL_LEQUAL)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 
+
 		glEnable(GL_COLOR_MATERIAL)
+
 		glEnable(GL_LIGHTING)
-		# glEnable(GL_LIGHTO)
-		# glLight(GL_LIGHTO, GL_POSITION, (0, 1, 1, 0))
+		glEnable(GL_LIGHT0)   
+		glLight(GL_LIGHT0, GL_POSITION,  (0, 1, 1, 0))
+
 		glMatrixMode(GL_MODELVIEW)
 		pass
 
 	def paintGL(self):
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
 		glLoadIdentity()
 
-		glTranslatef(0.0, -26.0, -100.0)
+		glTranslatef(0.0, -13.0, -50.0)
 		self.model1.draw()
 		pass
 
 	def resizeGL(self, width, height):
-		if height == 0:
-			height == 1
+		if height==0:
+			height=1
 		glViewport(0, 0, width, height)
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
-		gluPerspective(45, 1.0 * width / height, 0.1, 100.0)
+		gluPerspective(45, 1.0*width/height, 0.1, 100.0)
+		# #gluLookAt(0.0,0.0,45.0,0,0,0,0,40.0,0)
+		# if width <= height:
+		# 	glOrtho(-1,1,-1*height/width,1*height/width,-1,1)        
+		# else:
+		# 	glOrtho(-1*height/width,1*height/width,-1,1,-1,1)
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
 		pass
@@ -57,14 +65,14 @@ class GLWidget(QGLWidget):
 		glClearColor(0.0, 0.0, 0.0, 0.0)
 		glClearDepth(1.0)
 		glEnable(GL_DEPTH_TEST)
-		glShadeModel(GL_SMOOTH)
+		glShadeModel(GL_SMOOTH) 
 		glDepthFunc(GL_LEQUAL)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 
 		glEnable(GL_COLOR_MATERIAL)
 		glEnable(GL_LIGHTING)
-		glEnable(GL_LIGHTO)
-		glLight(GL_LIGHTO, GL_POSITION, (0, 1, 1, 0))
+		glEnable(GL_LIGHT0)   
+		glLight(GL_LIGHT0, GL_POSITION,  (0, 1, 1, 0))      
 		glMatrixMode(GL_MODELVIEW)
 		pass
 
@@ -101,10 +109,9 @@ class Triangle:
 
 	def calculate_vector(self, p1, p2):
 		return -p1.x + p2.x, -p1.y + p2.y, -p1.z + p2.z
-		pass
 
 	def cross_product(self, p1, p2):
-		return (ps[1]*p2[2]-p2[1]*p1[2]) , (p1[2]*p2[0])-(p2[0]*p1[0]) , (p1[0]*p2[1])-(p2[0]*p1[1])
+		return (p1[1]*p2[2]-p2[1]*p1[2]) , (p1[2]*p2[0])-(p2[0]*p1[0]) , (p1[0]*p2[1])-(p2[0]*p1[1])
 
 class Loader:
 
@@ -141,6 +148,7 @@ class Loader:
 		pass
 
 	def load_text_stl(self, filename):
+		rospy.logwarn('loading text')
 		fp = open(filename, 'r')
 
 		for line in fp.readlines():
@@ -152,10 +160,10 @@ class Loader:
 				if words[0] == 'facet':
 					center = [0.0, 0.0, 0.0]
 					triangle = []
-					normal = (eval(words[2]), eval(words[3]), eval(words[4]))
+					normal = (eval(words[2]),eval(words[3]),eval(words[4]))
 
 				if words[0] == 'vertex':
-					triangle.append((eval(words[1]), eval(words[2]), eval(words[3])))
+					triangle.append((eval(words[1]),eval(words[2]),eval(words[3])))
 
 				if words[0] == 'endloop':
 					if len(triangle) == 3:
@@ -164,6 +172,7 @@ class Loader:
 		pass
 
 	def load_binary_stl(self, filename):
+		rospy.logwarn('loading binary')
 		fp = open(filename, 'rb')
 		h = fp.read(80)
 
@@ -195,7 +204,7 @@ class Loader:
 				count += 1
 				fp.read(2)
 
-				if lean(p) == 0:
+				if len(p) == 0:
 					break
 			except EOFError:
 				break
