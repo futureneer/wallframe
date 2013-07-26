@@ -3,8 +3,6 @@
 from gl_widget_base import GLWidget
 from gl_quad import Rectangle
 from gl_utils import *
-import threading
-from OpenGL.GL import *
 
 class ImageBrowser(GLWidget):
 
@@ -21,7 +19,7 @@ class ImageBrowser(GLWidget):
 		pass
 
 	def initGL(self):
-		self.quad = Rectangle(0, 0, self.width_, self.height_, self.images[self.img_indx], 'ipl')
+		self.quad = Rectangle(0, 0, self.width_, self.height_, self.images[self.img_indx], 'PIL')
 
 	def paint(self):
 		self.quad.draw()
@@ -29,12 +27,12 @@ class ImageBrowser(GLWidget):
 
 	def next_image(self):
 		self.img_indx = (self.img_indx + 1) % self.num_imgages
-		self.quad.set_texture(self.images[self.img_indx])
+		self.quad.load_texture(self.images[self.img_indx], 'PIL')
 		self.update_widget()
 		pass
 
 	def prev_image(self):
 		self.img_indx = (self.img_indx - 1) % self.num_imgages
-		self.quad.set_texture(self.images[self.img_indx])
+		self.quad.load_texture(self.images[self.img_indx], 'PIL')
 		self.update_widget()
 		pass

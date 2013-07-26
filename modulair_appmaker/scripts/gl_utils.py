@@ -7,7 +7,7 @@ import rospy
 import numpy
 import cv
 from PIL import Image
-from PySide import QtGui
+from PySide import QtGui, QtCore
 
 ### ROS/PySide Functions ###
 
@@ -31,6 +31,10 @@ def log_warn(msg):
 def log_err(msg, *args):
 	rospy.logerr(msg)
 	pass
+
+def create_signal():
+	signal = QtCore.Signal()
+	return signal
 
 ### Image Functions ###
 
@@ -69,6 +73,20 @@ def to_string(image):
 	return image.tostring('raw', 'RGBX', 0, -1)
 
 ### Video Functions ###
+
+def load_video(path):
+	return cv.CaptureFromFile(path)
+
+def get_next_frame(video):
+	image = cv.QueryFrame(video)
+	cv.Flip(image, None, 0)
+	# cv.CvtColor(image, image, cv.CV_BGR2RGB)
+	image_arr = ipl2tex(image)
+
+	return image_arr
+
+def get_video_fps(video):
+	return int(cv.GetCaptureProperty(video, cv.CV_CAP_PROP_FPS))
 
 def ipl2tex(image):
 	depth2dtype = { 

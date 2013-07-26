@@ -1,19 +1,14 @@
 #!/usr/bin/env python
 
 import roslib; roslib.load_manifest('modulair_appmaker')
-
-from PySide import QtGui, QtCore
-
 from gl_wall_canvas import GLWallCanvas
-
 from image_browser import ImageBrowser
-
 from gl_utils import *
 
 class ImageBrowserApp(GLWallCanvas):
 
-	signal_next_image = QtCore.Signal()
-	signal_prev_image = QtCore.Signal()
+	signal_next_image = create_signal()
+	signal_prev_image = create_signal()
 
 	def __init__(self, name):
 		super(ImageBrowserApp, self).__init__(name)
@@ -21,7 +16,6 @@ class ImageBrowserApp(GLWallCanvas):
 		path = '/home/kel/modulair/modulair_appmaker/scripts/pics/'	
 
 		self.image_browser_widget = ImageBrowser(path, self.default_width, self.default_height)
-
 		self.use_default_layout(self.image_browser_widget)
 
 		self.signal_next_image.connect(self.image_browser_widget.next_image)

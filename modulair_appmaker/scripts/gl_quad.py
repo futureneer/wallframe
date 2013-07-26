@@ -17,11 +17,11 @@ class Rectangle(object):
 		self.width_ = width
 		self.height_ = height
 
-		self.texture = None
+		self.texture = 0
 		self.texture_needed = False
 
-		if img_type == 'ipl':
-			self.set_texture(image)
+		if image != None and img_type != None:
+			self.load_texture(image, img_type)
 
 		self.obj = self.make_commandlist()
 		pass
@@ -67,17 +67,35 @@ class Rectangle(object):
 
 		return gen_list
 
-	def set_texture(self, image):
+	def load_texture(self, image, type):
+		if type == 'PIL':
+			self.set_image_texture(image)
+		elif type == 'IPL':
+			self.set_frame_texture(image)
+		pass
+
+	def set_image_texture(self, image):
 		self.texture_needed = True
 		img_x = image.size[0]
 		img_y = image.size[1]
 
 		raw_image = to_string(image)
-		self.texture = glGenTextures(1)
+		glGenTextures(1, self.texture)
 		glBindTexture(GL_TEXTURE_2D, self.texture)
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, img_x, img_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_image)
+		self.update()
+		pass
+
+	def set_frame_texture(self, frame):
+		self.texture_needed = True
+		glGenTextures(1, self.texture)
+		glBindTexture(GL_TEXTURE_2D, self.texture)
+		
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.shape[1], frame.shape[0], 0, GL_BGR, GL_UNSIGNED_BYTE, frame)
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 		self.update()
 		pass
 

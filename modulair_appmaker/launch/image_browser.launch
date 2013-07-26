@@ -1,3 +1,3 @@
 <launch>
-  <node pkg="modulair_appmaker" name="image_browser" type="image_browser_launcher.py" />
+  <node pkg="modulair_appmaker" name="image_browser" type="image_browser_app.py" />
 </launch>
