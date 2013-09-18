@@ -174,6 +174,11 @@ class ModulairAppManager():
         app_launch_file = split_path[len(split_path)-1]
         app_launch_name = app_launch_file[:len(app_launch_file)-len('.launch')]
         app_short_name = app_launch_name[len('modulair_app_'):]
+        
+        # Only load applications in the manifest
+        if app_short_name not in self.apps_in_manifest_:
+          continue
+        
         if split_path[len(split_path)-2] == 'launch':
           app_launch_package = split_path[len(split_path)-3]
         else:

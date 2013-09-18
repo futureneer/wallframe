@@ -57,6 +57,10 @@ namespace modulair{
   public:
     AppUser(){};
     ~AppUser(){};
+
+    // joint names are ['head', 'neck', 'torso', 'right_shoulder', 'left_shoulder', 'right_elbow', 'left_elbow', 'right_hand', 'left_hand', 'right_hip', 'left_hip', 'right_knee', 'left_knee', 'right_foot', 'left_foot']
+
+
     Eigen::Vector3d jtPosByName(std::string j){ return joint_positions_[j]; };
     Eigen::Vector3d jtPosBodyByName(std::string j){ return joint_body_positions_[j]; };
     Eigen::Vector3d jtPosById(int id){ return joint_positions_[joint_names_[id]]; };

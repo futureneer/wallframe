@@ -5,6 +5,7 @@ from PySide import QtOpenGL
 from PySide.QtCore import QTimer
 ### OpenGL Imports ###
 from OpenGL.GL import *
+from OpenGL.GLUT import *
 from OpenGL.GLU import *
 
 class GLWidget(QtOpenGL.QGLWidget):
@@ -16,6 +17,10 @@ class GLWidget(QtOpenGL.QGLWidget):
 		self.timer.timeout.connect(self.idle)
 		self.timer.start(delay)
 		self.depth = depth
+
+		self.viewPortWidth = 0
+		self.viewPortHeight = 0
+		self.aspect = 0
 		pass
 
 	def initializeGL(self):
@@ -23,12 +28,14 @@ class GLWidget(QtOpenGL.QGLWidget):
 		glClearColor(0.7, 0.7, 0.7, 0.7)
 		glClearDepth(1.0)
 		glDepthFunc(GL_LESS)
-		glShadeModel(GL_SMOOTH)
-		glEnable(GL_DEPTH_TEST)     
+		# glShadeModel(GL_SMOOTH)
+		# glEnable(GL_DEPTH_TEST)
+		# # glFrontFace(GL_CW)    
+		# glCullFace(GL_BACK) 
 		glEnable(GL_CULL_FACE)
 		glEnable(GL_LIGHTING)
-		glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE)
-		glEnable(GL_NORMALIZE)
+		# glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE)
+		# glEnable(GL_NORMALIZE)
 		glEnable(GL_LIGHT0)
 		self.initGL()
 		pass
@@ -39,7 +46,21 @@ class GLWidget(QtOpenGL.QGLWidget):
 		pass
 
 	def resizeGL(self, width, height):
-		self.resize(width, height)
+		# if height == 0:
+		# 	height = 1
+
+		# glViewport(0,0,width,height)
+		# self.viewPortWidth = width
+		# self.viewPortHeight = height
+
+		# self.aspect = self.viewPortWidth/self.viewPortHeight
+		# glMatrixMode(GL_PROJECTION)
+		# glLoadIdentity()  
+
+		# self.resize(width, height)
+		
+		# glMatrixMode(GL_MODELVIEW) 
+		# glLoadIdentity()
 		pass
 
 	def initGL(self):
@@ -56,26 +77,12 @@ class GLWidget(QtOpenGL.QGLWidget):
 		pass
 
 	def resize(self, width, height):
-		# if height == 0:
-		# 	height = 1
-
-		# glViewport(0, 0, width, height)
-		# glMatrixMode(GL_PROJECTION)
-		# glLoadIdentity()
-
-		# if not self.depth:
-		# 	if width <= height:
-		# 		glOrtho(-1.0, 1.0, -1.0 * height / width, 1.0 * height / width, -1.0, 1.0)
-		# 	else:
-		# 		glOrtho(-1.0 * height / width, 1.0 * height / width, -1.0, 1.0, -1.0, 1.0)
-		# else:
-		# 	gluPerspective(45.0, float(width) / float(height), 0.1, 100.0)
-
-		# glEnable(GL_DEPTH_TEST)
-		# glMatrixMode(GL_MODELVIEW)
-		# glLoadIdentity()
 		pass
 
 	def clean_up(self):
 		self.timer.stop()
+		pass
+
+	def enableGlut(self):
+		glutInit()
 		pass

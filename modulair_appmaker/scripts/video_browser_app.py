@@ -10,7 +10,7 @@ class VideoBrowserApp(GLWallCanvas):
 	def __init__(self, name):
 		super(VideoBrowserApp, self).__init__(name)
 
-		path = '/home/kel/modulair/modulair_appmaker/scripts/vids/harry.mp4'
+		path = '/home/kel/modulair/modulair_appmaker/scripts/vids/random.avi'
 
 		self.video_browser_widget = VideoBrowser(path, self.default_width, self.default_height)
 		self.use_default_layout(self.video_browser_widget)

@@ -69,6 +69,7 @@ class User():
     self.hand_click_ = hand_click
     # State
     self.state__ = "IDLE"
+    self.prev_state__ = "IDLE"
     # Prameters from parameter server
     self.hand_limit_        = rospy.get_param('/modulair/user/hand_limit') 
     self.head_limit_        = rospy.get_param('/modulair/user/head_limit')  
@@ -302,33 +303,86 @@ class User():
     return nz
 
   def evaluate_events(self):
+    # rospy.logwarn("FIRST")
     # Hands Together
     if self.check_joint_dist(self.hand_limit_,'left_hand','right_hand'):
       self.current_state_msg.hands_together = True
     else:
       self.current_state_msg.hands_together = False
+
+
+    # Hands on Head
+    # if all( [self.check_joint_dist(self.head_limit_,'right_hand','head'),
+    #             self.check_joint_dist(self.head_limit_,'left_hand','head')] ):
+    #   self.current_state_msg.hands_on_head = True
+    # else:
+    #   self.current_state_msg.hands_on_head = False
+
+    # print self.check_joint_dist(self.head_limit_,'left_hand','head')
+
     # Hands on Head
     if all( [self.check_joint_dist(self.head_limit_,'right_hand','head'),
                 self.check_joint_dist(self.head_limit_,'left_hand','head')] ):
       self.current_state_msg.hands_on_head = True
+      self.current_state_msg.right_hand_on_head = False
+      self.current_state_msg.left_hand_on_head = False
+    # Just right hand on head  
+    elif self.check_joint_dist(self.head_limit_,'right_hand','head') == True:
+      self.current_state_msg.hands_on_head = False
+      self.current_state_msg.right_hand_on_head = True
+      self.current_state_msg.left_hand_on_head = False
+    # Just left hand on head  
+    elif self.check_joint_dist(self.head_limit_,'left_hand','head') == True:
+      self.current_state_msg.hands_on_head = False
+      self.current_state_msg.right_hand_on_head = False
+      self.current_state_msg.left_hand_on_head = True
     else:
       self.current_state_msg.hands_on_head = False
-      # Left Hand on Head
-      if self.check_joint_dist(self.head_limit_, 'left_hand', 'head'):
-        self.current_state_msg.right_hand_on_head = True
-      else:
-        self.current_state_msg.right_hand_on_head = False
-      # Right Hand on Head
-      if self.check_joint_dist(self.head_limit_, 'right_hand', 'head'):
-        self.current_state_msg.left_hand_on_head = True
-      else:
-        self.current_state_msg.left_hand_on_head = False
-    # Right Elbow Click
+      self.current_state_msg.right_hand_on_head = False
+      self.current_state_msg.left_hand_on_head = False
+
+
+
+
+      # # Right Hand on Head
+      # if self.check_joint_dist(self.head_limit_, 'left_hand', 'head'):
+      #   # rospy.logwarn("GETTING RIGHT")
+      #   self.current_state_msg.right_hand_on_head = True
+      # else:
+      #   # rospy.logwarn("NOT GETTING RIGHT")
+      #   self.current_state_msg.right_hand_on_head = False
+      # # Left Hand on Head
+      # if self.check_joint_dist(self.head_limit_, 'right_hand', 'head'):
+      #   self.current_state_msg.left_hand_on_head = True
+      # else:
+      #   self.current_state_msg.left_hand_on_head = False
+
+
+    # Hands on Head v.2
+    # left_on_head = self.check_joint_dist(self.head_limit_, 'right_hand', 'head')
+    # right_on_head = self.check_joint_dist(self.head_limit_, 'left_hand', 'head')
+
+    # if left_on_head:
+    #   if right_on_head:
+    #     self.current_state_msg.hands_on_head = True
+    #   else:
+    #     self.current_state_msg.left_hand_on_head = True
+    #     self.current_state_msg.hands_on_head = False
+    # elif right_on_head:
+    #   rospy.logwarn("GETTING RIGHT")
+    #   self.current_state_msg.left_hand_on_head = False
+    #   self.current_state_msg.right_hand_on_head = True
+    # else:
+    #   rospy.logwarn("NOT GETTING RIGHT")
+    #   self.current_state_msg.right_hand_on_head = False
+
+
+    # Left Elbow Click
     if self.check_joint_dist(self.hand_limit_,'left_hand','right_elbow'):
       self.current_state_msg.left_elbow_click = True
     else:
       self.current_state_msg.left_elbow_click = False
-    # Left Elbow Click
+    # Right Elbow Click
     if self.check_joint_dist(self.hand_limit_,'right_hand','left_elbow'):
       self.current_state_msg.right_elbow_click = True
     else:
@@ -375,6 +429,7 @@ class User():
     pass
 
   def evaluate_state(self):
+    # rospy.logwarn("SECOND")
     msg = user_event_msg()  
     msg.user_id = self.mid_
     msg.message = 'none'
@@ -382,81 +437,122 @@ class User():
     for case in switch(self.state__):
 
       if case('IDLE'):
+        # rospy.logwarn("IDLE")
         if self.current_state_msg.outside_workspace:
-            msg.event_id = 'workspace_event'
-            msg.message = 'outside_workspace'
-            self.state__ = 'OUTSIDE_WORKSPACE'
-            break
+          # rospy.logwarn("IDLE OUTSIDE")
+          msg.event_id = 'workspace_event'
+          msg.message = 'outside_workspace'
+          self.prev_state__ = self.state__
+          self.state__ = 'OUTSIDE_WORKSPACE'
+          print 'before: ' + self.state__
+          break
         # Hand Events
         msg.event_id = 'hand_event'
         if self.current_state_msg.hands_on_head:
-            msg.message = 'hands_on_head'
-            self.state__ = 'HANDS_HEAD'
-            break
+          msg.message = 'hands_on_head'
+          self.prev_state__ = self.state__
+          self.state__ = 'HANDS_HEAD'
+          print 'before: ' + self.state__
+          break
         if self.current_state_msg.left_hand_on_head:
-            msg.message = 'left_hand_on_head'
-            self.state__ = 'LEFT_HAND_ON_HEAD'
-            break
+          msg.message = 'left_hand_on_head'
+          self.prev_state__ = self.state__
+          self.state__ = 'LEFT_HAND_ON_HEAD'
+          print 'before: ' + self.state__
+          break
         if self.current_state_msg.right_hand_on_head:
-            msg.message = 'right_hand_on_head'
-            self.state__ = 'RIGHT_HAND_ON_HEAD'
-            break
+          # rospy.logwarn("IDLE RIGHT HAND ON HEAD")
+          msg.message = 'right_hand_on_head'
+          self.prev_state__ = self.state__
+          self.state__ = 'RIGHT_HAND_ON_HEAD'
+          print 'before: ' + self.state__
+          break
         if self.current_state_msg.hands_together:
           msg.message = 'hands_together'
+          self.prev_state__ = self.state__
           self.state__ = 'HANDS_TOGETHER'
+          print 'before: ' + self.state__
           break
         if self.current_state_msg.right_elbow_click:
           msg.message = 'right_elbow_click'
+          self.prev_state__ = self.state__
           self.state__ = 'RIGHT_ELBOW_CLICK'
+          print 'before: ' + self.state__
           break
         if self.current_state_msg.left_elbow_click:
           msg.message = 'left_elbow_click'
+          self.prev_state__ = self.state__
           self.state__ = 'LEFT_ELBOW_CLICK'
+          print 'before: ' + self.state__
           break
         break
 
       if case('OUTSIDE_WORKSPACE'):
         if not self.current_state_msg.outside_workspace:
+          self.prev_state__ = self.state__
           self.state__ = 'IDLE'
+          print 'after: ' + self.state__
         break
 
       if case('HANDS_TOGETHER'):
         if not self.current_state_msg.hands_together:
+          self.prev_state__ = self.state__
           self.state__ = 'IDLE'
+          print 'after: ' + self.state__
         break
 
       if case('HANDS_HEAD'):
         if not self.check_joint_dist(self.head_limit_,'left_hand','head'):
+          self.prev_state__ = self.state__
           self.state__ = 'IDLE'
+          print 'after: ' + self.state__
           break
         elif not self.check_joint_dist(self.head_limit_,'right_hand','head'):
+          self.prev_state__ = self.state__
           self.state__ = 'IDLE'
+          print 'after: ' + self.state__
           break
         break
 
       if case('LEFT_HAND_ON_HEAD'):
+        # rospy.logwarn("CHECKING LEFT")
         if not self.check_joint_dist(self.head_limit_, 'left_hand', 'head'):
-          self.state__ = 'IDLE'
+          # if not self.current_state_msg.left_hand_on_head:
+          self.prev_state__ = self.state__
+          # self.state__ = 'IDLE'
+          print 'after: ' + self.state__
           break
 
       if case('RIGHT_HAND_ON_HEAD'):
+        # rospy.logwarn("CHECKING RIGHT")
         if not self.check_joint_dist(self.head_limit_, 'right_hand', 'head'):
+          # if not self.current_state_msg.right_hand_on_head:
+          self.prev_state__ = self.state__
           self.state__ = 'IDLE'
+          print 'after: ' + self.state__
           break
 
       if case('RIGHT_ELBOW_CLICK'):
         if not self.current_state_msg.right_elbow_click:
+          self.prev_state__ = self.state__
           self.state__ = 'IDLE'
+          print 'after: ' + self.state__
         break
 
       if case('LEFT_ELBOW_CLICK'):
         if not self.current_state_msg.left_elbow_click:
+          self.prev_state__ = self.state__
           self.state__ = 'IDLE'
+          print 'after: ' + self.state__
         break
+
+    # print 'state: ' + self.state__ + '  -- prev: ' + self.prev_state__
 
     # Check for populated message and publish
     if 'none' not in msg.message:
       self.user_event_pub_.publish(msg)
+    else:
+      self.prev_state__ = self.state__
     pass
 
   def merge_to_state_msg(self):

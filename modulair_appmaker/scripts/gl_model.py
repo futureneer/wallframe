@@ -1,12 +1,23 @@
+"""
+------TODO-----
+Rotate the model with gestures
+Zoom in and out with gestures
+
+"""
+
 #!/usr/bin/env python
 
 import numpy
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GLUT import *
 
 import pyassimp
 from pyassimp.postprocess import *
 from pyassimp.helper import *
+
+import random
+from random import *
 
 class Model(object):
 
@@ -113,11 +124,11 @@ class Model(object):
 		if not hasattr(mat, "gl_mat"):
 			diffuse = numpy.array(mat.properties.get("diffuse", [0.8, 0.8, 0.8, 1.0]))
 			specular = numpy.array(mat.properties.get("specular", [0., 0., 0., 1.0]))
-			ambient = numpy.array(mat.properties.get("ambient", [0.2, 0.2, 0.2, 1.0]))
+			ambient = numpy.array(mat.properties.get("ambient", [0.6, 0.6, 0.6, 1.0]))
 			emissive = numpy.array(mat.properties.get("emissive", [0., 0., 0., 1.0]))
 			shininess = min(mat.properties.get("shininess", 1.0), 128)
 			wireframe = mat.properties.get("wireframe", 0)
-			twosided = mat.properties.get("twosided", 1)
+			twosided = mat.properties.get("twosided", 0)
 
 			setattr(mat, "gl_mat", glGenLists(1))
 			glNewList(mat.gl_mat, GL_COMPILE)
@@ -134,3 +145,57 @@ class Model(object):
 
 		glCallList(mat.gl_mat)
 		pass
+
+"""
+
+"""
+
+class Sphere(object):
+	def __init__(self, radius, color,x,y,xParam = [0,0] ,yParam = [0,0], zParam = [0,0]):
+		super(Sphere, self).__init__()
+		self.radius = radius
+		self.c = color
+		self.position = [x,y,0]
+		self.range = [[0,0],[0,0],[0,0]]
+		self.speed = [0,0,0]
+		self.collision = False
+
+		for i in xrange(0,2):
+			self.range[0][i] = xParam[i]
+			self.range[1][i] = yParam[i]
+			self.range[2][i] = zParam[i]
+			pass
+
+	def update(self):
+
+		glPushMatrix()
+		glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.c)
+		glMaterialfv(GL_FRONT, GL_SPECULAR, [ 1.0, 1.0, 1.0, 1.0 ]);
+		glMaterialf(GL_FRONT, GL_SHININESS, 30);
+		glLightfv(GL_LIGHT0, GL_AMBIENT,  [0.0, 0.0, 0.0, 1.0] );
+		glLightfv(GL_LIGHT0, GL_POSITION, [ 1.0, 1.0, 1.0, 0.0 ]);
+		glEnable(GL_LIGHTING)
+		glEnable(GL_LIGHT0) 
+		glEnable(GL_DEPTH_TEST)
+
+		glTranslatef(self.position[0],self.position[1],self.position[2])
+		glutSolidSphere(self.radius, 30, 30)
+		glPopMatrix()
+		pass
+
+	def move(self,x,y,z):
+		glPushMatrix()
+		glTranslatef(x,y,z);
+		glPopMatrix()
+		pass
+
+	def setSpeed(self,x,y,z):
+		self.speed = [x,y,z]
+		pass
+
+	def randomSpeed(self):
+		self.speed = [random()*0.04, random()*0.05,random()*0.07]
+		pass
+
+
+# Sphere(1, GREEN, 7, 6, 1),

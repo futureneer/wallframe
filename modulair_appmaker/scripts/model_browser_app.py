@@ -9,7 +9,7 @@ class ModelBrowserApp(GLWallCanvas):
 	def __init__(self, name):
 		super(ModelBrowserApp, self).__init__(name)
 		
-		path = '/home/kel/modulair/modulair_appmaker/scripts/models/Batman/BatmanArmoured.obj'
+		path = '/home/kel/modulair/modulair_appmaker/scripts/models/Collada/cow.x'
 		
 		self.model_browser_widget = ModelBrowser(path, self.default_width, self.default_height)
 		self.use_default_layout(self.model_browser_widget)
