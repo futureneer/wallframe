@@ -34,14 +34,14 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(_moc ${CMAKE_CURRENT_BINARY_DIR}/${_current_MOC})
 
 ## QT Wrapping
-set(modulair_core_sources src/modulair_app_base.cpp
-													src/modulair_app_base_qt.cpp)
-set(modulair_core_headers include/${PROJECT_NAME}/modulair_app_base.h
-													include/${PROJECT_NAME}/modulair_app_base_qt.h)
+set(wallframe_core_sources src/wallframe_app_base.cpp
+													src/wallframe_app_base_qt.cpp)
+set(wallframe_core_headers include/${PROJECT_NAME}/wallframe_app_base.h
+													include/${PROJECT_NAME}/wallframe_app_base_qt.h)
 
-qt4_wrap_cpp(modulair_core_headers_moc ${modulair_core_headers})
+qt4_wrap_cpp(wallframe_core_headers_moc ${wallframe_core_headers})
 
-# Create MODULAIR_CORE library (libmodulair_core)
-rosbuild_add_library(${PROJECT_NAME}	${modulair_core_headers}
-										${modulair_core_sources}
-										${modulair_core_headers_moc})
+# Create WALLFRAME_CORE library (libwallframe_core)
+rosbuild_add_library(${PROJECT_NAME}	${wallframe_core_headers}
+										${wallframe_core_sources}
+										${wallframe_core_headers_moc})

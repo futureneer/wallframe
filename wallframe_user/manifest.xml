@@ -1,13 +1,11 @@
 <package>
-  <description brief="modulair_user">
-
-     modulair_user
-
+  <description brief="wallframe_user">
+     wallframe_user
   </description>
   <author>KelleherGuerin</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/modulair_user</url>
+  <url>http://ros.org/wiki/wallframe_user</url>
   <depend package="std_msgs"/>
   <depend package="sensor_msgs"/>
   <depend package="rospy"/>

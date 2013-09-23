@@ -1,9 +1,0 @@
-Header header
-uint8 uid
-string name
-string[] frames
-float64[] confs
-geometry_msgs/Transform[] transforms_world
-geometry_msgs/Transform[] transforms_body
-geometry_msgs/Vector3[] projective
-geometry_msgs/Vector3 center_of_mass

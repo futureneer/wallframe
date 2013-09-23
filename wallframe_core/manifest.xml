@@ -1,16 +1,16 @@
 <package>
-  <description brief="modulair_core">
+  <description brief="wallframe_core">
 
-     A modular version of the Layered Application Interface for Research
+     A modular application management and development platform for large scale wall displays
 
   </description>
   <author>Kelleher Guerin</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/modulair_core</url>
+  <url>http://ros.org/wiki/wallframe_core</url>
   <depend package="roscpp"/>
   <depend package="rospy"/>
-  <depend package="modulair_msgs"/>
+  <depend package="wallframe_msgs"/>
   <depend package="tf_conversions"/>
     
   <export>
