@@ -1,6 +1,0 @@
-<launch>
-
-	<include file="$(find modulair_tracker)/launch/right_tracker.launch"></include>
-	<include file="$(find modulair_tracker)/launch/left_tracker.launch"></include>
-
-</launch>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import roslib; roslib.load_manifest('modulair_core')
+import roslib; roslib.load_manifest('wallframe_core')
 import rospy, os, sys, glob, fnmatch
 import rosgraph.masterapi
 from ros import roslaunch
@@ -12,14 +12,14 @@ from geometry_msgs.msg import Vector3
 from std_msgs.msg import Bool
 from std_msgs.msg import String
 
-from modulair_msgs.msg import ModulairUser as user_msg
-from modulair_msgs.msg import ModulairUserArray as user_array_msg
-from modulair_msgs.msg import ModulairUserEvent as user_event_msg
-from modulair_msgs.msg import TrackerUser
-from modulair_msgs.msg import TrackerUserArray as tracker_msg
+from wallframe_msgs.msg import WallframeUser as user_msg
+from wallframe_msgs.msg import WallframeUserArray as user_array_msg
+from wallframe_msgs.msg import WallframeUserEvent as user_event_msg
+from wallframe_msgs.msg import TrackerUser
+from wallframe_msgs.msg import TrackerUserArray as tracker_msg
 
-import modulair_core
-from modulair_core.srv import *
+import wallframe_core
+from wallframe_core.srv import *
 
 class AppLaunchFile():
   def __init__(self,name,launch_name,pack,launch_path,package_path,active):
@@ -30,7 +30,7 @@ class AppLaunchFile():
     self.package_ = pack
     self.active_ = active
 
-class ModulairAppManager():
+class WallframeAppManager():
   def __init__(self):
     # Member variables
     self.apps_in_manifest_ = []
@@ -39,9 +39,9 @@ class ModulairAppManager():
     # Roslaunch
     self.roslaunch_master_ = ROSLaunch()
     # ROS Init
-    rospy.init_node('modulair_app_manager',anonymous=True)
+    rospy.init_node('wallframe_app_manager',anonymous=True)
     # ROS Subscribers
-    self.modulair_event_sub = rospy.Subscriber("/modulair/events", String, self.modulair_event_cb)
+    self.wallframe_event_sub = rospy.Subscriber("/wallframe/events", String, self.wallframe_event_cb)
     
     # Load Apps
     self.load_application_manifest()
@@ -49,25 +49,25 @@ class ModulairAppManager():
 
     # ROS Services
     print''
-    self.load_app_srv_ = rospy.Service('app_manager/load_app', modulair_core.srv.load_app, self.load_app_service)
-    rospy.logwarn("ModulairAppManager: Service Ready [ load_app ]")
-    self.close_app_srv_ = rospy.Service('app_manager/close_app', modulair_core.srv.close_app, self.close_app_service)
-    rospy.logwarn("ModulairAppManager: Service Ready [ close_app ]")
-    self.close_all_apps_srv_ = rospy.Service('app_manager/close_all_apps', modulair_core.srv.close_all_apps, self.close_all_apps_service)
-    rospy.logwarn("ModulairAppManager: Service Ready [ close_all_apps ]")
+    self.load_app_srv_ = rospy.Service('app_manager/load_app', wallframe_core.srv.load_app, self.load_app_service)
+    rospy.logwarn("WallframeAppManager: Service Ready [ load_app ]")
+    self.close_app_srv_ = rospy.Service('app_manager/close_app', wallframe_core.srv.close_app, self.close_app_service)
+    rospy.logwarn("WallframeAppManager: Service Ready [ close_app ]")
+    self.close_all_apps_srv_ = rospy.Service('app_manager/close_all_apps', wallframe_core.srv.close_all_apps, self.close_all_apps_service)
+    rospy.logwarn("WallframeAppManager: Service Ready [ close_all_apps ]")
     
     # Running
-    rospy.logwarn("ModulairAppManager: Started")  
+    rospy.logwarn("WallframeAppManager: Started")  
     rospy.spin()
     
     # Quitting
-    rospy.logwarn("ModulairAppManager: Cleaning up running applications")  
+    rospy.logwarn("WallframeAppManager: Cleaning up running applications")  
     self.shutdown_all_apps()
     self.clean_up()
-    rospy.logwarn("ModulairAppManager: Finished")
+    rospy.logwarn("WallframeAppManager: Finished")
   
   def load_app_service(self,req):
-    message = "ModulairAppManager: Service Call to LOAD APP ["+req.app_name+"]"
+    message = "WallframeAppManager: Service Call to LOAD APP ["+req.app_name+"]"
     if self.launch_app(req.app_name) == True:
       return "LOAD APP -- SUCCESS"
     else:
@@ -75,8 +75,8 @@ class ModulairAppManager():
     pass
 
   def close_app_service(self,req):
-    message = "ModulairAppManager: Service Call to CLOSE APP ["+req.app_name+"]"
-    app_full_name = "modulair_app_"+req.app_name
+    message = "WallframeAppManager: Service Call to CLOSE APP ["+req.app_name+"]"
+    app_full_name = "wallframe_app_"+req.app_name
     if app_full_name in self.active_app_launchers_.keys():
       rospy.logwarn(message + "SUCCESS")
       self.shutdown_app(req.app_name)
@@ -87,7 +87,7 @@ class ModulairAppManager():
     pass
 
   def close_all_apps_service(self,req):
-    message = "ModulairAppManager: Service Call to CLOSE ALL APPS -- "
+    message = "WallframeAppManager: Service Call to CLOSE ALL APPS -- "
     if len(self.active_app_launchers_) == 0:
       rospy.logwarn(message + "FAILED -- No apps are running")
       return "CLOSE ALL APPS -- FAIL -- No apps are running" 
@@ -97,17 +97,17 @@ class ModulairAppManager():
       return "CLOSE ALL APPS -- SUCCESS"
     pass
 
-  def modulair_event_cb(self):
+  def wallframe_event_cb(self):
     pass
 
   def clean_up(self):
     for app_id,app in self.apps_.items():
-      if rospy.has_param("/modulair/core/available_app/" + app_id):
-        rospy.delete_param("/modulair/core/available_apps/" + app_id)
+      if rospy.has_param("/wallframe/core/available_app/" + app_id):
+        rospy.delete_param("/wallframe/core/available_apps/" + app_id)
         print("App parameters for [" + app_id + "] cleaned up")
 
-      if rospy.has_param("/modulair/core/available_apps"):
-        rospy.delete_param("/modulair/core/available_apps")
+      if rospy.has_param("/wallframe/core/available_apps"):
+        rospy.delete_param("/wallframe/core/available_apps")
         print("Remaining parameters cleaned up")
     pass    
 
@@ -116,25 +116,25 @@ class ModulairAppManager():
       app_process.terminate()
       while app_process.poll() == None:
         pass
-      if rospy.has_param("/modulair/core/apps/running/" + full_app_name):
-        rospy.delete_param("/modulair/core/apps/running/" + full_app_name)
-      rospy.logwarn("ModulairAppManager: App [" + full_app_name + "] shutdown successfully")
+      if rospy.has_param("/wallframe/core/apps/running/" + full_app_name):
+        rospy.delete_param("/wallframe/core/apps/running/" + full_app_name)
+      rospy.logwarn("WallframeAppManager: App [" + full_app_name + "] shutdown successfully")
     self.active_app_launchers_.clear()
 
   def shutdown_app(self,app_name):
-    full_app_name = "modulair_app_" + app_name
+    full_app_name = "wallframe_app_" + app_name
     app_process  = self.active_app_launchers_[full_app_name]
     app_process.terminate()
     while app_process.poll() == None:
       pass
-    if rospy.has_param("/modulair/core/apps/running/" + full_app_name):
-      rospy.delete_param("/modulair/core/apps/running/" + full_app_name)
+    if rospy.has_param("/wallframe/core/apps/running/" + full_app_name):
+      rospy.delete_param("/wallframe/core/apps/running/" + full_app_name)
     del self.active_app_launchers_[full_app_name]
-    rospy.logwarn("ModulairAppManager: App [" + full_app_name + "] shutdown successfully")
+    rospy.logwarn("WallframeAppManager: App [" + full_app_name + "] shutdown successfully")
 
   def launch_app(self,app_name):
     if app_name in self.apps_in_manifest_:
-      full_app_name = "modulair_app_" + app_name
+      full_app_name = "wallframe_app_" + app_name
       message = "AdjutantLauncher: Launching [" + full_app_name + "] ..."
 
       if full_app_name not in self.apps_.keys():
@@ -153,27 +153,27 @@ class ModulairAppManager():
         self.apps_[full_app_name].active_ = True
 
         rospy.logwarn(message + " SUCCESS! File [" + launch_name + "]")
-        rospy.set_param("/modulair/core/apps/running/" + app_name, [self.apps_[full_app_name]])
+        rospy.set_param("/wallframe/core/apps/running/" + app_name, [self.apps_[full_app_name]])
         return True
 
     else:
-      rospy.logerr("ModulairAppManager: Requested app [" + app_name + "] not found in manifest.")
+      rospy.logerr("WallframeAppManager: Requested app [" + app_name + "] not found in manifest.")
 
   def load_applications(self):
-    if rospy.has_param('/modulair/core/paths/application_path'):
-      self.app_path_ = rospy.get_param('/modulair/core/paths/application_path')
+    if rospy.has_param('/wallframe/core/paths/application_path'):
+      self.app_path_ = rospy.get_param('/wallframe/core/paths/application_path')
     else:
-      rospy.logerr("ModulairAppManager: application path not found on parameter server")
-    rospy.logwarn("ModulairAppManager: Loading Applications from [" + self.app_path_ + "]")
+      rospy.logerr("WallframeAppManager: application path not found on parameter server")
+    rospy.logwarn("WallframeAppManager: Loading Applications from [" + self.app_path_ + "]")
 
     available_app_list = {}
 
     for app_full_path in self.find_files(self.app_path_, '*.launch'):
       split_path = app_full_path.split("/")
-      if 'modulair_app' in split_path[len(split_path)-1]:
+      if 'wallframe_app' in split_path[len(split_path)-1]:
         app_launch_file = split_path[len(split_path)-1]
         app_launch_name = app_launch_file[:len(app_launch_file)-len('.launch')]
-        app_short_name = app_launch_name[len('modulair_app_'):]
+        app_short_name = app_launch_name[len('wallframe_app_'):]
         if split_path[len(split_path)-2] == 'launch':
           app_launch_package = split_path[len(split_path)-3]
         else:
@@ -186,30 +186,30 @@ class ModulairAppManager():
           app_package_path = '/'.join(full_path_split[:len(full_path_split)-1])
         
         available_app_list[app_short_name] = app_package_path
-        rospy.set_param("/modulair/core/available_app/" + app_launch_name, app_package_path)
+        rospy.set_param("/wallframe/core/available_app/" + app_launch_name, app_package_path)
 
 
         A = AppLaunchFile(app_launch_name,app_launch_file,app_launch_package,app_full_path,app_package_path,False)
         self.apps_[app_launch_name] = A
 
-        rospy.loginfo("ModulairAppManager: Found [" + app_launch_name + "]  in package  [" + app_launch_package + "]")
+        rospy.loginfo("WallframeAppManager: Found [" + app_launch_name + "]  in package  [" + app_launch_package + "]")
 
-    rospy.set_param("/modulair/core/available_apps", available_app_list)
+    rospy.set_param("/wallframe/core/available_apps", available_app_list)
 
     pass
 
   def load_application_manifest(self):
-    if rospy.has_param('/modulair/core/paths/app_manifest'):
-      self.app_manifest_ = rospy.get_param('/modulair/core/paths/app_manifest')
+    if rospy.has_param('/wallframe/core/paths/app_manifest'):
+      self.app_manifest_ = rospy.get_param('/wallframe/core/paths/app_manifest')
     else:
-      rospy.logerr("ModulairAppManager: application manifest not found on parameter server")
-    rospy.logwarn("ModulairAppManager: Loading Manifest")
+      rospy.logerr("WallframeAppManager: application manifest not found on parameter server")
+    rospy.logwarn("WallframeAppManager: Loading Manifest")
     print("Applications found in app_manifest:")
     manifest_elements = self.app_manifest_.split("\n")
     for e in manifest_elements:
       if e != '': # blank line check
         if '#' not in e: # commented line check
-          app = e[len('modulair_app_'):] # strip off modulair prefix
+          app = e[len('wallframe_app_'):] # strip off wallframe prefix
           print "-- " + app
           self.apps_in_manifest_.append(app)
 
@@ -222,4 +222,4 @@ class ModulairAppManager():
 
 # MAIN
 if __name__ == '__main__':
-  m = ModulairAppManager()
+  m = WallframeAppManager()

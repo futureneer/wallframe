@@ -1,5 +1,5 @@
 """
-  modulair_app_menu_button
+  wallframe_app_menu_button
   This button is the widget to be used for all the application entries.
   
   @author: Andy Tien
@@ -7,7 +7,7 @@
 
 from PySide.QtGui import QWidget, QPixmap, QLabel, QVBoxLayout
 
-class ModulairAppButton(QWidget):
+class WallframeAppButton(QWidget):
   def __init__(self, app_tag, app_image_path, app_description_path):
     QWidget.__init__(self)
     #App tag

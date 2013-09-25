@@ -10,7 +10,7 @@
   <depend package="sensor_msgs"/>
   <depend package="rospy"/>
   <depend package="roscpp"/>
-  <depend package="modulair_msgs"/>
+  <depend package="wallframe_msgs"/>
   <!-- <depend package="eigen"/> -->
   <depend package="tf"/>
   <depend package="tf_conversions"/>

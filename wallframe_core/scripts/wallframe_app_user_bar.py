@@ -8,9 +8,9 @@ from std_msgs.msg import String
 from PySide.QtGui import QWidget, QApplication
 from PySide.QtCore import QSize, Qt
 
-from modulair_app_user_bar_tab import ModulairAppUserBarTab 
+from wallframe_app_user_bar_tab import WallframeAppUserBarTab 
 
-class ModulairAppUserBar(QWidget):
+class WallframeAppUserBar(QWidget):
   def __init__(self):
     self.qapp_ = QApplication(sys.argv)
     QWidget.__init__(self)
@@ -24,12 +24,12 @@ class ModulairAppUserBar(QWidget):
     
     # Generate boxes
     for user in self.userlist_:
-      self.users_[user] = ModulairAppUserBarTab(user, self)
+      self.users_[user] = WallframeAppUserBarTab(user, self)
       self.users_[user].update_position(random.randint(0, 1366), 0)
     # Generate Popups
 #    self.popup_root = QWidget()
 #    for user in self.userlist_:
-#      self.popups_[user] = ModulairAppUserBarPopUp(self.popup_root)
+#      self.popups_[user] = WallframeAppUserBarPopUp(self.popup_root)
     
     
     # Size restrictions
@@ -62,7 +62,7 @@ class ModulairAppUserBar(QWidget):
     self.qapp_.exec_()
     
 def test():
-  bar = ModulairAppUserBar()
+  bar = WallframeAppUserBar()
   bar.run()
   
 if __name__ == "__main__":

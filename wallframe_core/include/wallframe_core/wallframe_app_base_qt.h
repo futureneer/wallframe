@@ -36,22 +36,22 @@
  * Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
  */
  
-#ifndef modulair_app_base_qt_h
-#define modulair_app_base_qt_h
+#ifndef wallframe_app_base_qt_h
+#define wallframe_app_base_qt_h
 // QT 
 #include "QtGui"
 #include <QtGui/QApplication>
 #include <QObject>
-// MODULAIR
-#include <modulair_core/modulair_app_base.h>
+// WALLFRAME
+#include <wallframe_core/wallframe_app_base.h>
 
-namespace modulair{
+namespace wallframe{
   
-  class ModulairAppBaseQt : public QWidget, public ModulairAppBase {
+  class WallframeAppBaseQt : public QWidget, public WallframeAppBase {
     Q_OBJECT // must include to use Qt signals and slots
   public:
-    ModulairAppBaseQt(std::string app_name, ros::NodeHandle nh, int event_deque_size);
-    ~ModulairAppBaseQt(){};
+    WallframeAppBaseQt(std::string app_name, ros::NodeHandle nh, int event_deque_size);
+    ~WallframeAppBaseQt(){};
     // Virtual Methods
     virtual bool build() = 0;
     virtual bool start() = 0;

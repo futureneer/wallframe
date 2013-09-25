@@ -12,7 +12,7 @@
 	
 	<node name="XnSensorServerKillerNode" output="screen" pkg="openni_tracker_improved" type="openni_tracker" launch-prefix="bash $(find openni_multi_launcher)/xn_sensor_server_cleanup.sh" />
 	
-	<node name="tracker_right" pkg="modulair_tracker" type="modulair_tracker_node" respawn="true">
+	<node name="tracker_right" pkg="wallframe_tracker" type="wallframe_tracker_node" respawn="true">
 		<param name="device_id" type="str" value="$(arg tracker_id_right)" />
 		<param name="camera_frame_id" type="str" value="/tracker_right_openni_depth_frame" />
 		<param name="tf_prefix" value="tracker_right" />

@@ -1,5 +1,5 @@
 <package>
-  <description brief="modulair_tracker">
+  <description brief="wallframe_tracker">
 
 openni_tracker_emun enumerates sensors based upon the ROS openni_launch scheme and broadcasts their OpenNI skeleton frames using tf.
 
@@ -7,7 +7,7 @@ openni_tracker_emun enumerates sensors based upon the ROS openni_launch scheme a
   <author>Kyle Mercer and Kelleher Guerin</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/modulair_tracker</url>
+  <url>http://ros.org/wiki/wallframe_tracker</url>
 
   <depend package="roscpp"/>
   <depend package="roslib"/>
@@ -15,7 +15,7 @@ openni_tracker_emun enumerates sensors based upon the ROS openni_launch scheme a
   <depend package="openni_camera"/>
   <depend package="kdl"/>
   <depend package="tf"/>
-  <depend package="modulair_msgs"/>
+  <depend package="wallframe_msgs"/>
   <rosdep name="openni_dev"/>
   <rosdep name="nite-dev"/>
 </package>

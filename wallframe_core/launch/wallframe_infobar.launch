@@ -1,0 +1,30 @@
+<launch>
+
+  <node pkg="wallframe_core" name="wallframe_infobar" type="wallframe_infobar.py" output="screen"/>
+
+  <rosparam>
+    wallframe:
+      core:
+        params:
+          x: 1680
+          y: 24
+          width: 5760
+          height: 3197
+        default_app: image_storm
+      app:
+        params:
+          height_percentage: .97
+      infobar:
+        params:
+          height_percentage: .03    
+      menu:
+        params:
+          height_percentage: .97
+          workspace_size: [-1200,1200,-600,600,1500,3000]
+          border_scale: .02
+          y_offset: -600.0
+          screensaver: no
+  </rosparam>
+
+
+</launch>

@@ -1,5 +1,5 @@
 # ROS imports
-import roslib; roslib.load_manifest('modulair_core')
+import roslib; roslib.load_manifest('wallframe_core')
 import rospy
 ### PySide ###
 import PySide
@@ -7,9 +7,9 @@ from PySide.QtGui import QWidget, QApplication
 from PySide.QtCore import QTimer
 from PySide import QtCore
 
-__all__ = ['ModulairAppWidget']
-__all__ = ['ModulairAppWidgetGL']
+__all__ = ['WallframeAppWidget']
+__all__ = ['WallframeAppWidgetGL']
 
-### Modulair App Base Classes ###
-from modulair_app_base import ModulairAppWidget
-from modulair_app_base_gl import ModulairAppWidgetGL
+### Wallframe App Base Classes ###
+from wallframe_app_base import WallframeAppWidget
+from wallframe_app_base_gl import WallframeAppWidgetGL

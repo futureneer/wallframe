@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # ROS Imports
-import roslib; roslib.load_manifest('modulair_user')
+import roslib; roslib.load_manifest('wallframe_user')
 import rospy
 import tf
 # ROS Messages
@@ -9,12 +9,12 @@ from geometry_msgs.msg import Vector3
 from std_msgs.msg import Bool
 from std_msgs.msg import String
 from std_msgs.msg import Float32
-# Modulair Imports
-from modulair_msgs.msg import ModulairUser as user_msg
-from modulair_msgs.msg import ModulairUserArray as user_array_msg
-from modulair_msgs.msg import ModulairUserEvent as user_event_msg
-from modulair_msgs.msg import TrackerUser
-from modulair_msgs.msg import TrackerUserArray as tracker_msg
+# Wallframe Imports
+from wallframe_msgs.msg import WallframeUser as user_msg
+from wallframe_msgs.msg import WallframeUserArray as user_array_msg
+from wallframe_msgs.msg import WallframeUserEvent as user_event_msg
+from wallframe_msgs.msg import TrackerUser
+from wallframe_msgs.msg import TrackerUserArray as tracker_msg
 # Helper functions and classes (local)
 from OneEuroFilter import OneEuroFilter
 from Switch import switch
@@ -70,17 +70,17 @@ class User():
     # State
     self.state__ = "IDLE"
     # Prameters from parameter server
-    self.hand_limit_        = rospy.get_param('/modulair/user/hand_limit') 
-    self.head_limit_        = rospy.get_param('/modulair/user/head_limit')  
-    self.elbow_limit_       = rospy.get_param('/modulair/user/elbow_limit')    
-    self.base_frame_        = rospy.get_param('/modulair/user/base_frame','wall_frame')
-    self.filter_mincutoff_  = rospy.get_param('/modulair/user/filter_mincutoff',1.0)
-    self.filter_beta_       = rospy.get_param('/modulair/user/filter_beta',0.1)    
-    self.filter_dcutoff_    = rospy.get_param('/modulair/user/filter_dcutoff',1.0) 
-    self.run_frequency_     = rospy.get_param('/modulair/user/run_frequency',1.0)   
-    self.workspace_limits_  = rospy.get_param('/modulair/user/workspace_limits')
+    self.hand_limit_        = rospy.get_param('/wallframe/user/hand_limit') 
+    self.head_limit_        = rospy.get_param('/wallframe/user/head_limit')  
+    self.elbow_limit_       = rospy.get_param('/wallframe/user/elbow_limit')    
+    self.base_frame_        = rospy.get_param('/wallframe/user/base_frame','wall_frame')
+    self.filter_mincutoff_  = rospy.get_param('/wallframe/user/filter_mincutoff',1.0)
+    self.filter_beta_       = rospy.get_param('/wallframe/user/filter_beta',0.1)    
+    self.filter_dcutoff_    = rospy.get_param('/wallframe/user/filter_dcutoff',1.0) 
+    self.run_frequency_     = rospy.get_param('/wallframe/user/run_frequency',1.0)   
+    self.workspace_limits_  = rospy.get_param('/wallframe/user/workspace_limits')
 
-    self.vpub_ = rospy.Publisher('/modulair/user/vel',Float32)
+    self.vpub_ = rospy.Publisher('/wallframe/user/vel',Float32)
     self.hand_x_ = 0.0
     self.hand_y_ = 0.0
     self.up_cnt_ = 0
@@ -434,7 +434,7 @@ class User():
   def merge_to_state_msg(self):
     # Create Packet
     msg = user_msg()
-    msg.modulair_id = self.mid_
+    msg.wallframe_id = self.mid_
     msg.frame_names = self.frame_names_
     msg.frame_confs = self.confs_merged_
 
@@ -456,44 +456,44 @@ class UserManager():
     self.no_users_ = True
 
     # ROS 
-    rospy.init_node('modulair_user_manager',anonymous=True)
+    rospy.init_node('wallframe_user_manager',anonymous=True)
     self.time_ = rospy.get_time()
     # ROS Params
-    self.com_dist_thresh_   = rospy.get_param('/modulair/user/center_distance_threshold',100) # default is 100 mm
-    self.run_frequency_    = rospy.get_param('/modulair/user/run_frequency',30.0)
+    self.com_dist_thresh_   = rospy.get_param('/wallframe/user/center_distance_threshold',100) # default is 100 mm
+    self.run_frequency_    = rospy.get_param('/wallframe/user/run_frequency',30.0)
 
-    filtering = rospy.get_param('/modulair/user/user_filtering')
+    filtering = rospy.get_param('/wallframe/user/user_filtering')
     if filtering == False:
       self.filtering_ = False
-      rospy.logwarn("ModulairUserManager: User Filtering set to FALSE")
+      rospy.logwarn("WallframeUserManager: User Filtering set to FALSE")
     elif filtering == True:
       self.filtering_ = True
-      rospy.logwarn("ModulairUserManager: User Filtering set to TRUE")
+      rospy.logwarn("WallframeUserManager: User Filtering set to TRUE")
     else:
-      rospy.logwarn("ModulairUserManager: user_filtering parameter invalid value ["+str(filtering)+"]or not found")
+      rospy.logwarn("WallframeUserManager: user_filtering parameter invalid value ["+str(filtering)+"]or not found")
 
-    hand_click = rospy.get_param('/modulair/user/hand_click')
+    hand_click = rospy.get_param('/wallframe/user/hand_click')
     if hand_click == False:
       self.hand_click_ = False
-      rospy.logwarn("ModulairUserManager: User Hand Based Click set to FALSE")
+      rospy.logwarn("WallframeUserManager: User Hand Based Click set to FALSE")
     elif hand_click == True:
       self.hand_click_ = True
-      rospy.logwarn("ModulairUserManager: User Hand Based Click set to TRUE")
+      rospy.logwarn("WallframeUserManager: User Hand Based Click set to TRUE")
     else:
-      rospy.logwarn("ModulairUserManager: hand_click parameter invalid value ["+str(hand_click)+"]or not found")
+      rospy.logwarn("WallframeUserManager: hand_click parameter invalid value ["+str(hand_click)+"]or not found")
 
     # Publishers
-    self.user_state_pub_ = rospy.Publisher("/modulair/users/state",user_array_msg)
-    self.user_event_pub_ = rospy.Publisher("/modulair/users/events",user_event_msg)
-    self.modulair_event_pub = rospy.Publisher("/modulair/events",String)
-    self.toast_pub_ = rospy.Publisher("/modulair/info/toast",String)
-    self.debug_pub_ = rospy.Publisher("/modulair/info/debug",String)
+    self.user_state_pub_ = rospy.Publisher("/wallframe/users/state",user_array_msg)
+    self.user_event_pub_ = rospy.Publisher("/wallframe/users/events",user_event_msg)
+    self.wallframe_event_pub = rospy.Publisher("/wallframe/events",String)
+    self.toast_pub_ = rospy.Publisher("/wallframe/info/toast",String)
+    self.debug_pub_ = rospy.Publisher("/wallframe/info/debug",String)
     # Subscriber
-    self.tracker_sub = rospy.Subscriber("/modulair/tracker/users",tracker_msg,self.tracker_cb)
+    self.tracker_sub = rospy.Subscriber("/wallframe/tracker/users",tracker_msg,self.tracker_cb)
     # TF Listener
     self.tf_listener_ = tf.TransformListener()
 
-    rospy.logwarn('ModulairUserManager: Started')
+    rospy.logwarn('WallframeUserManager: Started')
 
     while not rospy.is_shutdown():
       # self.time_ = rospy.get_time()
@@ -507,7 +507,7 @@ class UserManager():
       rospy.sleep(1.0/self.run_frequency_) # for 30 hz operation
 
     # Finish
-    rospy.logwarn('ModulairUserManager: Finished')
+    rospy.logwarn('WallframeUserManager: Finished')
 
   def publish_user_state(self):
     state_packet = user_array_msg()
@@ -545,9 +545,9 @@ class UserManager():
         gone.append(uid)
 
     for g in gone:
-      if rospy.has_param("modulair/user_data/"+str(g)):
-        rospy.delete_param("modulair/user_data/"+str(g))
-      rospy.logwarn("User [modulair UID: " + str(g) + "] lost, removing from list")
+      if rospy.has_param("wallframe/user_data/"+str(g)):
+        rospy.delete_param("wallframe/user_data/"+str(g))
+      rospy.logwarn("User [wallframe UID: " + str(g) + "] lost, removing from list")
       self.toast_pub_.publish(String("User "+str(g)+" Lost"))
       
       msg = user_event_msg()  
@@ -586,7 +586,7 @@ class UserManager():
       # print user_packet.uid
       add_new_user = False
 
-      # print "number of modulair users: " + str(len(self.users_))
+      # print "number of wallframe users: " + str(len(self.users_))
 
       # Check and update active trackers
       if user_packet.tracker_id not in self.active_trackers_:
@@ -615,7 +615,7 @@ class UserManager():
           #   # user is not being tracked by this packet's tracker
           #   if check_com(user_packet,user) == True:
           #     # this is the same user in a different tracker
-          #     rospy.logwarn("Found user [modulair UID:" + str(user.uid_) + "] in new tracker [tracker " + str(user_packet.tracker_id) + ", tracker ID: " + str(user_packet.uid) + "]")
+          #     rospy.logwarn("Found user [wallframe UID:" + str(user.uid_) + "] in new tracker [tracker " + str(user_packet.tracker_id) + ", tracker ID: " + str(user_packet.uid) + "]")
           #     user.tracker_packets_[user_packet.tracker_id] = user_packet
           #     user.tracker_uids_[user_packet.tracker_id] = user_packet.uid
           #   else:
@@ -656,10 +656,10 @@ class UserManager():
           msg.message = 'user_entered'
           self.user_event_pub_.publish(msg)
 
-          rospy.logwarn("Adding user: [tracker ID: " + str(user_packet.uid) + "], [modulair ID: " + str(self.current_uid_) + "]")
+          rospy.logwarn("Adding user: [tracker ID: " + str(user_packet.uid) + "], [wallframe ID: " + str(self.current_uid_) + "]")
           self.toast_pub_.publish(String("User "+str(self.current_uid_)+" Joined"))
           self.users_[u.mid_] = u
-          rospy.set_param("modulair/user_data/"+str(u.mid_),self.users_[u.mid_].get_info())
+          rospy.set_param("wallframe/user_data/"+str(u.mid_),self.users_[u.mid_].get_info())
           self.current_uid_ += 1
           if self.current_uid_ > 6:
             self.current_uid_ = 0

@@ -36,11 +36,11 @@
  * Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
  */
 
-#include "modulair_core/modulair_app_base_qt.h"
+#include "wallframe_core/wallframe_app_base_qt.h"
 
-namespace modulair{
+namespace wallframe{
 
-  ModulairAppBaseQt::ModulairAppBaseQt(std::string app_name, ros::NodeHandle nh, int event_deque_size = 10): ModulairAppBase(app_name,nh,event_deque_size)
+  WallframeAppBaseQt::WallframeAppBaseQt(std::string app_name, ros::NodeHandle nh, int event_deque_size = 10): WallframeAppBase(app_name,nh,event_deque_size)
   {  
     // Build Widget
     this->setWindowFlags(Qt::FramelessWindowHint);
@@ -55,7 +55,7 @@ namespace modulair{
     __ros_ok_timer.start(15);
   }
 
-  void ModulairAppBaseQt::checkRosOk(){
+  void WallframeAppBaseQt::checkRosOk(){
     if(!ros::ok()){
       qApp->quit();
     }else{
@@ -63,4 +63,4 @@ namespace modulair{
     }
   }
 
-} // end namespace modulair
+} // end namespace wallframe

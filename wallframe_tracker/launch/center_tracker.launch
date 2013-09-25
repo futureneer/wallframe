@@ -2,7 +2,7 @@
 <launch>
 
 	<arg name="tracker_name" default="tracker_center" />
-	<arg name="tracker_id" default="#3" />
+	<arg name="tracker_id" default="#1" />
 	<!-- <arg name="tracker_bus_id" default="001@15"/> -->
 
 	<!-- <include file="$(find openni_launch)/launch/openni.launch">
@@ -12,15 +12,15 @@
 		<arg name="depth_camera_info_url" value="file://$(env ROS_HOME)/camera_info/depth_$(arg tracker_id).yaml" />
 	</include> -->
 
-	<node name="XnSensorServerKillerNode" output="screen" pkg="modulair_tracker" type="modulair_tracker_node" launch-prefix="bash $(find modulair_tracker)/xn_sensor_server_cleanup.sh" />
+	<node name="XnSensorServerKillerNode" output="screen" pkg="wallframe_tracker" type="wallframe_tracker_node" launch-prefix="bash $(find wallframe_tracker)/xn_sensor_server_cleanup.sh" />
 	
-	<node name="tracker1" output="screen" pkg="modulair_tracker" type="modulair_tracker_node" >
+	<node name="tracker1" output="screen" pkg="wallframe_tracker" type="wallframe_tracker_node" >
 		<param name="device_id" type="str" value="$(arg tracker_id)" />
 		<param name="tf_prefix" value="tracker_center" />
 		<param name="relative_frame" value="/wall_frame" />
 	</node>
 
 	<!-- TF alignment file -->
-	<include file="$(find modulair_tracker)/launch/center_alignment.launch"/>
+	<include file="$(find wallframe_tracker)/launch/center_alignment.launch"/>
 
 </launch>

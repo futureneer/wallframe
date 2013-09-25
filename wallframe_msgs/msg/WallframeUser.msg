@@ -1,6 +1,6 @@
 # WallFrameUser: Contains a snapshot of a single users tracking data.
 Header header
-uint8 modulair_id
+uint8 wallframe_id
 string[] frame_names
 float32[] frame_confs
 geometry_msgs/Transform[] transforms

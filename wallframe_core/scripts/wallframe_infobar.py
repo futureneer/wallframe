@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import roslib; roslib.load_manifest('modulair_core')
+import roslib; roslib.load_manifest('wallframe_core')
 import rospy,sys
 ### PySide ###
 import PySide
@@ -12,14 +12,14 @@ from geometry_msgs.msg import Vector3
 from std_msgs.msg import Bool
 from std_msgs.msg import String
 
-from modulair_msgs.msg import ModulairUser
-from modulair_msgs.msg import ModulairUserArray
-from modulair_msgs.msg import ModulairUserEvent
-from modulair_msgs.msg import TrackerUser
-from modulair_msgs.msg import TrackerUserArray as tracker_msg
+from wallframe_msgs.msg import WallframeUser
+from wallframe_msgs.msg import WallframeUserArray
+from wallframe_msgs.msg import WallframeUserEvent
+from wallframe_msgs.msg import TrackerUser
+from wallframe_msgs.msg import TrackerUserArray as tracker_msg
 
-import modulair_core
-from modulair_core.srv import *
+import wallframe_core
+from wallframe_core.srv import *
 
 '''
 class UserTag(QWidget):
@@ -83,10 +83,10 @@ class UserTag(QWidget):
     self.joint_labels_ = {}
     self.create_joint_labels()
 
-    if rospy.has_param("/modulair/menu/params/workspace_size"):
-      self.workspace_limits = rospy.get_param("/modulair/menu/params/workspace_size")
+    if rospy.has_param("/wallframe/menu/params/workspace_size"):
+      self.workspace_limits = rospy.get_param("/wallframe/menu/params/workspace_size")
     else:
-      self.rospy.logerr("ModulairInfobar: parameter [workspace_size] not found on server")
+      self.rospy.logerr("WallframeInfobar: parameter [workspace_size] not found on server")
 
     self.height_ = int(self.parent_height_ * 3)
     self.width_ = int(self.parent_width_ * 0.05)
@@ -154,12 +154,12 @@ class UserTag(QWidget):
     pass
 
 ################################################################################
-class ModulairInfobar(QWidget):
+class WallframeInfobar(QWidget):
 
   toast_message_ = QtCore.Signal()
   
   def __init__(self,app):
-    super(ModulairInfobar,self).__init__()
+    super(WallframeInfobar,self).__init__()
     # Member variables    
     self.app_ = app
     self.ok_timer_ = QTimer(self)
@@ -168,36 +168,36 @@ class ModulairInfobar(QWidget):
     self.user_tags_ = {}
     self.num_users_ = 0
     self.focused_user_id_ = -1
-    rospy.logwarn("ModulairInfobar: Starting")
+    rospy.logwarn("WallframeInfobar: Starting")
     # ROS Subscribers
-    self.user_state_sub_ = rospy.Subscriber("/modulair/users/state", ModulairUserArray, self.user_state_cb)
-    self.user_event_sub_ = rospy.Subscriber("/modulair/users/events", ModulairUserEvent, self.user_event_cb)
-    self.toast_sub_ = rospy.Subscriber("/modulair/info/toast", String, self.toast_cb)
+    self.user_state_sub_ = rospy.Subscriber("/wallframe/users/state", WallframeUserArray, self.user_state_cb)
+    self.user_event_sub_ = rospy.Subscriber("/wallframe/users/events", WallframeUserEvent, self.user_event_cb)
+    self.toast_sub_ = rospy.Subscriber("/wallframe/info/toast", String, self.toast_cb)
     # App parameters
-    if rospy.has_param("/modulair/core/params/x"):
-      self.wall_x_ = rospy.get_param("/modulair/core/params/x")
+    if rospy.has_param("/wallframe/core/params/x"):
+      self.wall_x_ = rospy.get_param("/wallframe/core/params/x")
     else:
-      rospy.logerr("ModulairInfobar: parameter [x] not found on server")
+      rospy.logerr("WallframeInfobar: parameter [x] not found on server")
 
-    if rospy.has_param("/modulair/core/params/y"):
-      self.wall_y_ = rospy.get_param("/modulair/core/params/y")
+    if rospy.has_param("/wallframe/core/params/y"):
+      self.wall_y_ = rospy.get_param("/wallframe/core/params/y")
     else:
-      rospy.logerr("ModulairInfobar: parameter [y] not found on server")
+      rospy.logerr("WallframeInfobar: parameter [y] not found on server")
 
-    if rospy.has_param("/modulair/core/params/width"):
-      self.wall_width_ = rospy.get_param("/modulair/core/params/width")
+    if rospy.has_param("/wallframe/core/params/width"):
+      self.wall_width_ = rospy.get_param("/wallframe/core/params/width")
     else:
-      rospy.logerr("ModulairInfobar: parameter [width] not found on server")
+      rospy.logerr("WallframeInfobar: parameter [width] not found on server")
 
-    if rospy.has_param("/modulair/core/params/height"):
-      self.wall_height_ = rospy.get_param("/modulair/core/params/height")
+    if rospy.has_param("/wallframe/core/params/height"):
+      self.wall_height_ = rospy.get_param("/wallframe/core/params/height")
     else:
-      rospy.logerr("ModulairInfobar: parameter [height] not found on server")
+      rospy.logerr("WallframeInfobar: parameter [height] not found on server")
 
-    if rospy.has_param("/modulair/infobar/params/height_percentage"):
-      self.height_perc_ = rospy.get_param("/modulair/infobar/params/height_percentage")
+    if rospy.has_param("/wallframe/infobar/params/height_percentage"):
+      self.height_perc_ = rospy.get_param("/wallframe/infobar/params/height_percentage")
     else:
-      rospy.logerr("ModulairInfobar: parameter [height_percentage] not found on server")
+      rospy.logerr("WallframeInfobar: parameter [height_percentage] not found on server")
 
     # Set base app widget size and hints based on parameters
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
@@ -276,7 +276,7 @@ class ModulairInfobar(QWidget):
       self.update_tags()
 
   def clean_up(self):
-    rospy.logwarn("ModulairInfobar: Cleaning up")  
+    rospy.logwarn("WallframeInfobar: Cleaning up")  
     pass
 
   def update_tag(self,uid):
@@ -294,10 +294,11 @@ class ModulairInfobar(QWidget):
     # Update or create new user tags
     for uid,user in self.users_.items():
       if uid in self.user_tags_.keys():
+        print uid
         self.update_tag(uid)
       else:
         # make new tag
-        rospy.logwarn("ModulairInfobar: Found [user " + str(uid) + "], creating tag")
+        rospy.logwarn("WallframeInfobar: Found [user " + str(uid) + "], creating tag")
         t = UserTag(uid,self,self.width_,self.height_)
         self.user_tags_[uid] = t
         self.update_tag(uid)
@@ -309,7 +310,7 @@ class ModulairInfobar(QWidget):
         tags_to_remove.append(uid)
     # Remove tags without users
     for tag in tags_to_remove:
-      rospy.logwarn("ModulairInfobar: Lost [user " + str(tag) + "], cleaning up tag")
+      rospy.logwarn("WallframeInfobar: Lost [user " + str(tag) + "], cleaning up tag")
       self.user_tags_[tag].hide_mini_skel()
       self.user_tags_[tag].hide()
       del(self.user_tags_[tag])
@@ -322,8 +323,8 @@ class ModulairInfobar(QWidget):
     self.users_.clear()
     for user in self.current_users_:
       if user.focused == True:
-        self.focused_user_id_ = user.modulair_id
-      self.users_[user.modulair_id] = user
+        self.focused_user_id_ = user.wallframe_id
+      self.users_[user.wallframe_id] = user
 
     pass
 
@@ -332,10 +333,10 @@ class ModulairInfobar(QWidget):
 
 # MAIN
 if __name__ == '__main__':
-  rospy.init_node('modulair_infobar',anonymous=True)
+  rospy.init_node('wallframe_infobar',anonymous=True)
   app = QApplication(sys.argv)
-  infobar = ModulairInfobar(app)
+  infobar = WallframeInfobar(app)
   # Running
   app.exec_()
   # Done
-  rospy.logwarn('ModulairInfobar: Finished')
+  rospy.logwarn('WallframeInfobar: Finished')

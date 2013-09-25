@@ -38,7 +38,7 @@
 #
 
 #!/usr/bin/env python
-import roslib; roslib.load_manifest('modulair_core')
+import roslib; roslib.load_manifest('wallframe_core')
 import rospy, sys
 ### PySide ###
 import PySide
@@ -46,7 +46,7 @@ from PySide import QtCore
 from PySide import QtGui
 from PySide.QtOpenGL import QGLWidget
 from PySide.QtGui import QApplication
-from modulair_core import ModulairAppWidget
+from wallframe_core import WallframeAppWidget
 import math
 
 try:
@@ -60,9 +60,9 @@ except ImportError:
   sys.exit(1)
 
 ################################################################################
-class ModulairAppWidgetGL(ModulairAppWidget):
+class WallframeAppWidgetGL(WallframeAppWidget):
   def __init__(self,name, app):
-    super(ModulairAppWidgetGL,self).__init__(name,app)
+    super(WallframeAppWidgetGL,self).__init__(name,app)
     self.glWidget = GLWidget()
     # self.xSlider = self.createSlider(QtCore.SIGNAL("xRotationChanged(int)"),
     #                                  self.glWidget.setXRotation)
@@ -355,7 +355,7 @@ class GLWidget(QGLWidget):
 if __name__ == '__main__':
   rospy.init_node('python_example_app_gl',anonymous=True)
   app = QApplication(sys.argv)
-  app_widget = ModulairAppWidgetGL("PythonExampleAppGL",app)
+  app_widget = WallframeAppWidgetGL("PythonExampleAppGL",app)
   # Running
   rospy.logwarn("PythonExampleApp: Started")  
   app.exec_()

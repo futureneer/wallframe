@@ -26,8 +26,8 @@
 
 //My deps
 #include "EnumWrapper.h"
-#include <modulair_msgs/TrackerUser.h>
-#include <modulair_msgs/TrackerUserArray.h>
+#include <wallframe_msgs/TrackerUser.h>
+#include <wallframe_msgs/TrackerUserArray.h>
 
 using namespace std;
 using namespace openni_wrapper;
@@ -38,7 +38,7 @@ std::string prefix;
 static ros::Publisher user_array_publisher;
 
 //BEGIN TF PUBLISHER FUNCTIONS
-void publishTransform(modulair_msgs::TrackerUser& user_msg, XnUserID const& user, XnSkeletonJoint const& joint, string const& frame_id, string const& child_frame_id, EnumWrapper *kinect) {
+void publishTransform(wallframe_msgs::TrackerUser& user_msg, XnUserID const& user, XnSkeletonJoint const& joint, string const& frame_id, string const& child_frame_id, EnumWrapper *kinect) {
     static tf::TransformBroadcaster br;
     xn::DepthGenerator *g_DepthGenerator = kinect -> getDepthGeneratorNode();
     xn::UserGenerator *g_UserGenerator = kinect -> getUserGeneratorNode();
@@ -110,14 +110,14 @@ void publishTransforms(const std::string& frame_id, EnumWrapper *kinect) {
 
 
     // std::ostringstream topic;
-    // topic << "/modulair/users/raw/" << prefix;
+    // topic << "/wallframe/users/raw/" << prefix;
     // std::string topic_name = std::string(topic.str());
 
-    // // ROS_WARN_STREAM("MODULAIR TRACKER: Broadcasting user data on: " << topic_name);
+    // // ROS_WARN_STREAM("WALLFRAME TRACKER: Broadcasting user data on: " << topic_name);
 
-    // static ros::Publisher user_array_publisher = n.advertise<modulair_msgs::TrackerUserArray>(topic_name.c_str(), 10);
+    // static ros::Publisher user_array_publisher = n.advertise<wallframe_msgs::TrackerUserArray>(topic_name.c_str(), 10);
 
-    modulair_msgs::TrackerUserArray user_array_msg;
+    wallframe_msgs::TrackerUserArray user_array_msg;
     user_array_msg.numUsers = 0;
 
     /////////////////////////////////////////////
@@ -131,7 +131,7 @@ void publishTransforms(const std::string& frame_id, EnumWrapper *kinect) {
         g_UserGenerator -> GetCoM(user, CoM);
 
         //
-        modulair_msgs::TrackerUser user_msg;
+        wallframe_msgs::TrackerUser user_msg;
         user_msg.header.seq = 0;
         user_msg.header.stamp = ros::Time::now();
         user_msg.header.frame_id = "/" + prefix + "/" + frame_id;
@@ -242,12 +242,12 @@ int main(int argc, char **argv)
     ros::param::get("~/tf_prefix",prefix);
 
     std::ostringstream topic;
-    topic << "/modulair/tracker/users/";
+    topic << "/wallframe/tracker/users/";
     std::string topic_name = std::string(topic.str());
 
-    ROS_WARN_STREAM("MODULAIR TRACKER: Broadcasting user data on: " << topic_name);
+    ROS_WARN_STREAM("WALLFRAME TRACKER: Broadcasting user data on: " << topic_name);
 
-    user_array_publisher = nh.advertise<modulair_msgs::TrackerUserArray>(topic_name.c_str(), 10);
+    user_array_publisher = nh.advertise<wallframe_msgs::TrackerUserArray>(topic_name.c_str(), 10);
 
 	xn::Context g_Context;
 	xn::NodeInfoList nodeList;

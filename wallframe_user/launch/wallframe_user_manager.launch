@@ -1,7 +1,7 @@
 <launch>
   <node pkg="wallframe_user" type="wallframe_user_manager.py" name="wallframe_user_manager" output="screen" />
   <rosparam>
-    modulair:
+    wallframe:
       user:
         base_frame: wall_frame
         center_distance_threshold: 100

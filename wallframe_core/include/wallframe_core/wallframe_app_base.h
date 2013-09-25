@@ -36,22 +36,22 @@
  * Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
  */
 
-#ifndef modulair_app_base_h
-#define modulair_app_base_h
+#ifndef wallframe_app_base_h
+#define wallframe_app_base_h
 // STD
 #include <deque>
 // ROS
 #include <ros/ros.h>
 #include <ros/node_handle.h>
 #include <std_msgs/String.h>
-// MODULAIR
-#include <modulair_msgs/ModulairUserArray.h>
-#include <modulair_msgs/ModulairUserEvent.h>
-#include <modulair_msgs/ModulairUser.h>
+// WALLFRAME
+#include <wallframe_msgs/WallframeUserArray.h>
+#include <wallframe_msgs/WallframeUserEvent.h>
+#include <wallframe_msgs/WallframeUser.h>
 // TF and EIGEN
 #include <tf_conversions/tf_eigen.h>
 
-namespace modulair{
+namespace wallframe{
 
   class AppUser{
   public:
@@ -88,14 +88,14 @@ namespace modulair{
 
   typedef std::map<int,AppUser> AppUserMap;
 
-  class ModulairAppBase{
+  class WallframeAppBase{
   public:
-    ModulairAppBase(std::string app_name, ros::NodeHandle nh, int event_deque_size);
-    ~ModulairAppBase(){};
+    WallframeAppBase(std::string app_name, ros::NodeHandle nh, int event_deque_size);
+    ~WallframeAppBase(){};
 
-    void userStateCallback(const modulair_msgs::ModulairUserArrayConstPtr &user_packet);
-    void userEventCallback(const modulair_msgs::ModulairUserEventConstPtr &user_event);
-    void modulairEventCallback(const std_msgs::StringConstPtr &modulair_event);
+    void userStateCallback(const wallframe_msgs::WallframeUserArrayConstPtr &user_packet);
+    void userEventCallback(const wallframe_msgs::WallframeUserEventConstPtr &user_event);
+    void wallframeEventCallback(const std_msgs::StringConstPtr &wallframe_event);
     void updateUserData();
     bool getFocusedUser(AppUser& u);
     // Virtual Methods
@@ -117,13 +117,13 @@ namespace modulair{
     std::vector<int> active_user_ids_;
     ros::Subscriber user_state_subscriber_;
     ros::Subscriber user_event_subscriber_;
-    ros::Subscriber modulair_event_subscriber_;
+    ros::Subscriber wallframe_event_subscriber_;
     ros::Publisher debug_publisher_;
     ros::Publisher toast_publisher_;
-    modulair_msgs::ModulairUserArray current_user_packet_;
-    std::vector<modulair_msgs::ModulairUser> user_data_;
-    modulair_msgs::ModulairUserEvent current_user_event_;
-    std::deque<modulair_msgs::ModulairUserEvent> user_event_deque_;
+    wallframe_msgs::WallframeUserArray current_user_packet_;
+    std::vector<wallframe_msgs::WallframeUser> user_data_;
+    wallframe_msgs::WallframeUserEvent current_user_event_;
+    std::deque<wallframe_msgs::WallframeUserEvent> user_event_deque_;
   };
 
 }

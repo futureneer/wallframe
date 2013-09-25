@@ -10,7 +10,7 @@
 		<arg name="depth_camera_info_url" value="file://$(env ROS_HOME)/camera_info/depth_$(arg tracker_id_left).yaml" />
 	</include> -->
 
-	<node name="tracker_left" pkg="modulair_tracker" type="modulair_tracker_node" respawn="true">
+	<node name="tracker_left" pkg="wallframe_tracker" type="wallframe_tracker_node" respawn="true">
 		<param name="device_id" type="str" value="$(arg tracker_id_left)" />
 		<param name="camera_frame_id" type="str" value="/tracker_left_openni_depth_frame" />
 		<param name="tf_prefix" value="tracker_left" />

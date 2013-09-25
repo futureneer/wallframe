@@ -1,20 +1,22 @@
 <launch>
 
-  <group ns="/modulair/core">
-    <node pkg="modulair_core" name="modulair_app_manager" type="app_manager.py" output="screen"/>
-    <arg name="app_manifest_path" default="$(find modulair_core)/modulair_application_manifest.yaml" />
+  <group ns="/wallframe/core">
+    <!-- Application Manageeer processes, no visual output - only service call interface -->
+    <node pkg="wallframe_core" name="wallframe_app_manager" type="wallframe_app_manager.py" output="screen"/>
+    <arg name="app_manifest_path" default="$(find wallframe_core)/wallframe_application_manifest.yaml" />
     <param name="paths/app_manifest" textfile="$(arg app_manifest_path)" />
-    <param name="paths/application_path" value="/home/kel/modulair_applications" /> 
+    <param name="paths/application_path" value="/home/kel/wallframe_workspace/wallframe_apps" /> 
   </group>
-  <node pkg="modulair_core" name="modulair_infobar" type="modulair_infobar.py" output="screen"/>
+  <!-- Infobar at the bottom of the screen that shows user avatar and messages -->
+  <node pkg="wallframe_core" name="wallframe_infobar" type="wallframe_infobar.py" output="screen"/>
 
-  <param name="/modulair/menu/params/cursor_path" value="$(find modulair_core)/assets/cursor_open.png" /> 
-  <param name="/modulair/menu/params/cursor_path_alt" value="$(find modulair_core)/assets/cursor_closed.png" /> 
-  <param name="/modulair/menu/params/background_path" value="$(find modulair_core)/assets/background.jpg" /> 
-  <node pkg="modulair_core" name="modulair_app_menu" type="modulair_app_menu.py" output="screen"/>
+  <param name="/wallframe/menu/params/cursor_path" value="$(find wallframe_core)/assets/cursor_open.png" /> 
+  <param name="/wallframe/menu/params/cursor_path_alt" value="$(find wallframe_core)/assets/cursor_closed.png" /> 
+  <param name="/wallframe/menu/params/background_path" value="$(find wallframe_core)/assets/background.jpg" /> 
+  <node pkg="wallframe_core" name="wallframe_app_menu" type="wallframe_app_menu.py" output="screen"/>
   
   <rosparam>
-    modulair:
+    wallframe:
       core:
         params:
           x: 1680

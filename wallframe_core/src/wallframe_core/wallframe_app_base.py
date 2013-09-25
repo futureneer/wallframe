@@ -37,7 +37,7 @@
 # Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
 #
 
-import roslib; roslib.load_manifest('modulair_core')
+import roslib; roslib.load_manifest('wallframe_core')
 import rospy
 ### PySide ###
 import PySide
@@ -49,58 +49,58 @@ from geometry_msgs.msg import Transform
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Bool
 from std_msgs.msg import String
-# Modulair Msgs
-from modulair_msgs.msg import ModulairUser
-from modulair_msgs.msg import ModulairUserArray
-from modulair_msgs.msg import ModulairUserEvent
-from modulair_msgs.msg import TrackerUser
-from modulair_msgs.msg import TrackerUserArray as tracker_msg
-# Modulair Core
-import modulair_core
-from modulair_core.srv import *
+# Wallframe Msgs
+from wallframe_msgs.msg import WallframeUser
+from wallframe_msgs.msg import WallframeUserArray
+from wallframe_msgs.msg import WallframeUserEvent
+from wallframe_msgs.msg import TrackerUser
+from wallframe_msgs.msg import TrackerUserArray as tracker_msg
+# Wallframe Core
+import wallframe_core
+from wallframe_core.srv import *
 
 ################################################################################
-class ModulairAppWidget(QWidget):
+class WallframeAppWidget(QWidget):
   def __init__(self,name, app):
-    super(ModulairAppWidget,self).__init__()
+    super(WallframeAppWidget,self).__init__()
     # Member variables    
     self.name_ = name
     self.app_ = app
     self.ok_timer_ = QTimer(self)
     self.current_users_ = []
-    self.current_user_event_ = ModulairUserEvent()
+    self.current_user_event_ = WallframeUserEvent()
     self.users_ = {}
     self.num_users_ = 0
     self.height_perc_ = 1
     self.focused_user_id_ = -1
     rospy.logwarn(self.name_ + ": App Widget Starting")
     # ROS Subscribers
-    self.user_state_sub_ = rospy.Subscriber("/modulair/users/state", ModulairUserArray, self.user_state_cb)
-    self.user_event_sub_ = rospy.Subscriber("/modulair/users/events", ModulairUserEvent, self.user_event_cb)
+    self.user_state_sub_ = rospy.Subscriber("/wallframe/users/state", WallframeUserArray, self.user_state_cb)
+    self.user_event_sub_ = rospy.Subscriber("/wallframe/users/events", WallframeUserEvent, self.user_event_cb)
     
     # App parameters
-    if rospy.has_param("/modulair/core/params/x"):
-      self.x_ = rospy.get_param("/modulair/core/params/x")
+    if rospy.has_param("/wallframe/core/params/x"):
+      self.x_ = rospy.get_param("/wallframe/core/params/x")
     else:
       rospy.logerr(self.name_ + ": parameter [x] not found on server")
 
-    if rospy.has_param("/modulair/core/params/y"):
-      self.y_ = rospy.get_param("/modulair/core/params/y")
+    if rospy.has_param("/wallframe/core/params/y"):
+      self.y_ = rospy.get_param("/wallframe/core/params/y")
     else:
       rospy.logerr(self.name_ + ": parameter [y] not found on server")
 
-    if rospy.has_param("/modulair/core/params/width"):
-      self.width_ = rospy.get_param("/modulair/core/params/width")
+    if rospy.has_param("/wallframe/core/params/width"):
+      self.width_ = rospy.get_param("/wallframe/core/params/width")
     else:
       rospy.logerr(self.name_ + ": parameter [width] not found on server")
 
-    if rospy.has_param("/modulair/core/params/height"):
-      self.height_ = rospy.get_param("/modulair/core/params/height")
+    if rospy.has_param("/wallframe/core/params/height"):
+      self.height_ = rospy.get_param("/wallframe/core/params/height")
     else:
       rospy.logerr(self.name_ + ": parameter [height] not found on server")
 
-    if rospy.has_param("/modulair/app/params/height_percentage"):
-      self.height_perc_ = rospy.get_param("/modulair/app/params/height_percentage")
+    if rospy.has_param("/wallframe/app/params/height_percentage"):
+      self.height_perc_ = rospy.get_param("/wallframe/app/params/height_percentage")
     else:
       rospy.logerr(self.name_ + ": parameter [height_percentage] not found on server")
     rospy.logwarn(self.name_ + ": height percentage set to " + str(self.height_perc_))
