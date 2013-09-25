@@ -10,4 +10,4 @@ __WallFrame__ is envisioned as a high level framework for creating, managing and
    * Tools for notifications and debugging
    * Base applications written in Python and C++ that can be inherited to provide direct access to user data and other resources, as well as display application data seamlessly across multiple displays 
    * Simple configuration files (using ROS and yaml) for changing application parameters without compiling
-   * A set of [sample applications](wiki/sample_applications)
+   * A set of [sample applications](https://github.com/futureneer/wallframe_apps)
