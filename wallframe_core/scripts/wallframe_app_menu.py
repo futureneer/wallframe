@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #####################################################################
 # Software License Agreement (BSD License)
 #
@@ -35,8 +36,6 @@
 ###
 # Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
 ###
-
-#!/usr/bin/env python
 """
   Wallframe App_ Menu
   First prototype of wallframe_app_menu. Uses Model-View/Controller approach.

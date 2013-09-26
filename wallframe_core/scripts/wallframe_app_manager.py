@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #####################################################################
 # Software License Agreement (BSD License)
 #
@@ -36,7 +37,6 @@
 # Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
 ###
 
-#!/usr/bin/env python
 import roslib; roslib.load_manifest('wallframe_core')
 import rospy, os, sys, glob, fnmatch
 import rosgraph.masterapi
