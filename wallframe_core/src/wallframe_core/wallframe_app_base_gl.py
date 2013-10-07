@@ -32,10 +32,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
-
-#
-# Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
-#
+__author__ = "Kelleher Guerin"
+__email__ = "futureneer@gmail.com"
+__copyright__ = "2013, The Johns Hopkins University"
+__license__ = "BSD"
+################################################################################
 
 #!/usr/bin/env python
 import roslib; roslib.load_manifest('wallframe_core')
@@ -64,22 +65,9 @@ class WallframeAppWidgetGL(WallframeAppWidget):
   def __init__(self,name, app):
     super(WallframeAppWidgetGL,self).__init__(name,app)
     self.glWidget = GLWidget()
-    # self.xSlider = self.createSlider(QtCore.SIGNAL("xRotationChanged(int)"),
-    #                                  self.glWidget.setXRotation)
-    # self.ySlider = self.createSlider(QtCore.SIGNAL("yRotationChanged(int)"),
-    #                                  self.glWidget.setYRotation)
-    # self.zSlider = self.createSlider(QtCore.SIGNAL("zRotationChanged(int)"),
-    #                                  self.glWidget.setZRotation)
     mainLayout = QtGui.QGridLayout()
     mainLayout.addWidget(self.glWidget)
-    # mainLayout.addWidget(self.xSlider)
-    # mainLayout.addWidget(self.ySlider)
-    # mainLayout.addWidget(self.zSlider)
     self.setLayout(mainLayout)
-    # self.xSlider.setValue(15 * 16)
-    # self.ySlider.setValue(345 * 16)
-    # self.zSlider.setValue(0 * 16)
-    # self.setWindowTitle(self.tr("Hello GL"))
 
   def createSlider(self, changedSignal, setterSlot):
     slider = QtGui.QSlider(QtCore.Qt.Vertical)

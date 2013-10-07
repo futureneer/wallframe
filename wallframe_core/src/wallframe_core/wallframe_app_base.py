@@ -32,10 +32,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
-
-#
-# Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
-#
+__author__ = "Kelleher Guerin"
+__email__ = "futureneer@gmail.com"
+__copyright__ = "2013, The Johns Hopkins University"
+__license__ = "BSD"
+################################################################################
 
 import roslib; roslib.load_manifest('wallframe_core')
 import rospy
@@ -59,10 +60,17 @@ from wallframe_msgs.msg import TrackerUserArray as tracker_msg
 import wallframe_core
 from wallframe_core.srv import *
 
-################################################################################
+
+"""
+Base class widget for a python app in wallframe
+"""
 class WallframeAppWidget(QWidget):
+  """
+  In init, all of the necessary ROS interfaces are created, including publishers and subscribers for getting user data from the wallframe user manager, as well as getting the window size and other information from the parameter server.  Also, this function creates a basic qt window that will be the parent of anything else in the app.
+  """
   def __init__(self,name, app):
     super(WallframeAppWidget,self).__init__()
+
     # Member variables    
     self.name_ = name
     self.app_ = app
@@ -74,6 +82,7 @@ class WallframeAppWidget(QWidget):
     self.height_perc_ = 1
     self.focused_user_id_ = -1
     rospy.logwarn(self.name_ + ": App Widget Starting")
+
     # ROS Subscribers
     self.user_state_sub_ = rospy.Subscriber("/wallframe/users/state", WallframeUserArray, self.user_state_cb)
     self.user_event_sub_ = rospy.Subscriber("/wallframe/users/events", WallframeUserEvent, self.user_event_cb)
@@ -118,23 +127,31 @@ class WallframeAppWidget(QWidget):
 
     rospy.logwarn(self.name_ + ": App Widget Set Up Successfully")
 
+  """
+  Check to see if ROS has recieved a TERM signal, and if so, stop the Qt thread
+  """
   # @QtCore.Slot(bool)
   def check_ok(self):
     if rospy.is_shutdown():
       self.clean_up()
       self.app_.exit()
 
+  """
+  Clean up or delete things, such as ros parameters  
+  """
   def clean_up(self):
     rospy.logwarn(self.name_ + ": App Widget Cleaning up")
-    # Clean up or delete things, such as ros parameters  
     pass    
 
+  """
+  Signal functions here that you want to run on a user state callback
+  """
   def user_state_cb(self,msg):
     self.current_users_ = msg.users
-    # Signal functions here that you want to run on a user state callback
     pass
-
+  """
+  Signal functions here that you want to run on an event callback
+  """
   def user_event_cb(self,msg):
     self.current_user_event_ = msg
-    # Signal functions here that you want to run on an event callback
     pass

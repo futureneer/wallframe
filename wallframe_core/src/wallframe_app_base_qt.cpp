@@ -39,7 +39,10 @@
 #include "wallframe_core/wallframe_app_base_qt.h"
 
 namespace wallframe{
-
+  //! Base application for using Qt with wallframe in c++
+  /*!
+    This class inherits the WallframeAppBase and also provides a parent Qt widget which will be resized to the specified size of the wall in the launch file
+  */
   WallframeAppBaseQt::WallframeAppBaseQt(std::string app_name, ros::NodeHandle nh, int event_deque_size = 10): WallframeAppBase(app_name,nh,event_deque_size)
   {  
     // Build Widget
@@ -54,7 +57,7 @@ namespace wallframe{
     connect( &__ros_ok_timer, SIGNAL(timeout()), this, SLOT(checkRosOk()) );
     __ros_ok_timer.start(15);
   }
-
+  //! Method to catch TERM sent to ROS and to close down the Qt thread as well
   void WallframeAppBaseQt::checkRosOk(){
     if(!ros::ok()){
       qApp->quit();

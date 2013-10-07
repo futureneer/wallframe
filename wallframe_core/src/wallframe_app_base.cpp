@@ -47,6 +47,10 @@ namespace wallframe{
     initBaseApp();
 	}
 
+  //! Initializes the base application,
+  /*!
+    This method creates the ROS interfaces such as the subscribers and publishers to the user message topics, as well as getting parameters for the app screen size, and reducing the displayed size by the height percentage of the infobar (if desired)
+  */
   bool WallframeAppBase::initBaseApp(){
     // Initialize User Listeners
     user_state_subscriber_ = node_.subscribe("/wallframe/users/state", 1000, &WallframeAppBase::userStateCallback, this);
@@ -92,12 +96,20 @@ namespace wallframe{
     return true;
   }
 
+  //! Callback method for user array messages from the wallframe_user_manager
+  /*!
+    This method handles callbacks for the current users from the user manager, putting their data into the user_data_ element
+  */
   void WallframeAppBase::userStateCallback(const wallframe_msgs::WallframeUserArrayConstPtr &user_packet){
     this->current_user_packet_ = *user_packet;
     this->user_data_ = this->current_user_packet_.users;
     updateUserData();
   }
 
+  //! Callback method for user event data
+  /*!
+    This method handles callbacks for discrete user events from the user manager, placing them in a temp variable current_user_event_ as well as a deque, user_event_deque
+  */
   void WallframeAppBase::userEventCallback(const wallframe_msgs::WallframeUserEventConstPtr &user_event){
     current_user_event_ = *user_event;
     user_event_deque_.push_front(*user_event);
@@ -106,9 +118,11 @@ namespace wallframe{
     }
   }
 
+  //! Callback for wallframe events, not implemented yet
   void WallframeAppBase::wallframeEventCallback(const std_msgs::StringConstPtr &wallframe_event){
   }
 
+  //! Method to update user data and populate the users_ class instance with the information from all of the current users
   void WallframeAppBase::updateUserData(){
     // Get number of users
     this->num_users_ = this->user_data_.size();
@@ -150,6 +164,7 @@ namespace wallframe{
     }
   }
 
+  //! Method that gets a reference to the focused user (the user closest to the wall)
   bool WallframeAppBase::getFocusedUser(AppUser& u){
     if (focused_user_id_ != -1){
       u = this->users_[focused_user_id_];
