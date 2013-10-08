@@ -116,10 +116,10 @@ class WallframeAppWidget(QWidget):
 
     # Set base app widget size and hints based on parameters
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    self.show()
     self.resize(self.width_, int(self.height_*self.height_perc_) )
     self.move(self.x_,self.y_)
     self.setWindowTitle(self.name_)
-    self.show()
 
     # Set up ros_ok watchdog timer to handle termination and ctrl-c
     self.connect(self.ok_timer_, QtCore.SIGNAL("timeout()"), self.check_ok)

@@ -69,6 +69,7 @@ class WallframeCursor(QWidget):
     super(WallframeCursor,self).__init__(parent)
     self.w_ = 350
     self.h_ = 350
+    self.show()
     self.resize(self.w_,self.h_)
     self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
     self.setStyleSheet("background:transparent;")
@@ -76,15 +77,16 @@ class WallframeCursor(QWidget):
     self.label_alt_ = QLabel(self)
 
     self.label_.setPixmap(image)
+    self.label_.show()    
     self.label_.setAutoFillBackground(True)
     self.label_.setScaledContents(True)
     self.label_.setFixedSize(self.w_,self.h_)
     self.label_.setAttribute(QtCore.Qt.WA_TranslucentBackground)
     self.label_.setStyleSheet("background:transparent;")
     self.label_.move(0,0)
-    self.label_.show()    
 
     self.label_alt_.setPixmap(image_alt)
+    self.label_alt_.show()
     self.label_alt_.setAutoFillBackground(True)
     self.label_alt_.setScaledContents(True)
     self.label_alt_.setFixedSize(self.w_,self.h_)
@@ -228,18 +230,19 @@ class ModularMenu(QWidget):
     self.setWindowTitle("Wallframe Main Menu")
     self.gridLayout_ = QGridLayout() 
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    self.show()
     self.resize(self.width_, self.height_)
     self.move(self.x_,self.y_)
     self.setLayout(self.gridLayout_)
-    self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+    # self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
 
     self.background_ = QLabel(self)
+    self.background_.show()
     self.background_.move(0,0)
     self.background_.resize(self.width_,self.height_)
     self.background_.setScaledContents(True)
     self.background_.setAutoFillBackground(True)
     self.background_.setPixmap(self.background_path_)
-    self.background_.show()
 
     # Create App Widgets
     self.assignWidgets() # create widget
@@ -261,7 +264,8 @@ class ModularMenu(QWidget):
     if rospy.is_shutdown():
       self.qt_app_.exit()
     else:
-      self.update_cursor()      
+      self.update_cursor()
+      pass      
     pass
 
   def setup_grid(self):
@@ -316,6 +320,7 @@ class ModularMenu(QWidget):
     self.app_menu_items_.clear()
     for app, app_path in self.app_paths_.items():
       label = QLabel(app,self)
+      label.show()
       image = app_path + '/menu_icon.png'
       rospy.logwarn('WallframeMenu:  Adding button for '+app+" app.")
       label.setPixmap(image)
@@ -324,7 +329,6 @@ class ModularMenu(QWidget):
       label.setFixedSize((self.width_/(16.0/4.0))-self.border_, (self.height_/(9.0/4.0))-self.border_)
       label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
       label.setStyleSheet("background:transparent;")
-      label.show()
       nextx, nexty = self.next_pos()
       self.gridLayout_.addWidget(label, nextx, nexty )
       self.app_menu_items_[app] = label

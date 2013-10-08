@@ -49,10 +49,10 @@ namespace wallframe{
     this->setWindowFlags(Qt::FramelessWindowHint);
     this->setAutoFillBackground(true);
     this->setStyleSheet("background-color:#222222;");
+    this->show();
     this->move(x_,y_);
     this->resize(width_,height_);
     this->setFocus();
-    this->show();
 
     connect( &__ros_ok_timer, SIGNAL(timeout()), this, SLOT(checkRosOk()) );
     __ros_ok_timer.start(15);
