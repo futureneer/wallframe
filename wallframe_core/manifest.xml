@@ -14,7 +14,7 @@
   <depend package="tf_conversions"/>
     
   <export>
-    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmodulair_core"/>  
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lwallframe_core"/>  
   </export>
 
 </package>
