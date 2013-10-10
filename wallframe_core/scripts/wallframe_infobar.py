@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#####################################################################
+################################################################################
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2013, Johns Hopkins University
@@ -9,13 +9,13 @@
 # modification, are permitted provided that the following conditions
 # are met:
 #
-# # Redistributions of source code must retain the above copyright
+# * Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-# # Redistributions in binary form must reproduce the above
+# * Redistributions in binary form must reproduce the above
 # copyright notice, this list of conditions and the following
 # disclaimer in the documentation and/or other materials provided
 # with the distribution.
-# # Neither the name of the Johns Hopkins University nor the names of its
+# * Neither the name of the Johns Hopkins University nor the names of its
 # contributors may be used to endorse or promote products derived
 # from this software without specific prior written permission.
 #
@@ -31,11 +31,12 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-#####################################################################
-
-###
-# Author: Kelleher Guerin, futureneer@gmail.com, Johns Hopkins University
-###
+################################################################################
+__author__ = "Kelleher Guerin"
+__email__ = "futureneer@gmail.com"
+__copyright__ = "2013, The Johns Hopkins University"
+__license__ = "BSD"
+################################################################################
 
 import roslib; roslib.load_manifest('wallframe_core')
 import rospy,sys
@@ -58,47 +59,6 @@ from wallframe_msgs.msg import TrackerUserArray as tracker_msg
 
 import wallframe_core
 from wallframe_core.srv import *
-
-'''
-class UserTag(QWidget):
-  def __init__(self,uid,parent,parent_width,parent_height):
-    super(UserTag,self).__init__(parent)
-    self.uid_ = uid
-    self.parent_height_ = parent_height
-    self.parent_width_ = parent_width
-    self.state_ = 'IDLE'
-    self.mode_ = 'MINIMIZED'
-
-    self.height_ = int(self.parent_height_ * 0.7)
-    self.width_ = int(self.parent_width_ * 0.05)
-    self.y_ = int(self.parent_height_ * 0.15)
-
-    self.resize(self.width_, self.height_)
-    self.move(int(self.parent_width_/2.0),self.y_)
-    self.setStyleSheet("background-color:#ffffff;color:#222222")
-    # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
-    self.setAutoFillBackground(True)
-    self.show()
-
-    bold_font = QFont()
-    bold_font.setBold(True)
-    bold_font.setPixelSize(self.height_ * 0.6)
-
-    self.label_ = QLabel("USER " + str(uid), self)
-    self.label_.resize(self.width_, self.height_)
-    self.label_.setStyleSheet("background-color:#ffffff;color:#222222")
-    self.label_.setAutoFillBackground(True)
-    self.label_.setAlignment(QtCore.Qt.AlignCenter)
-    self.label_.setFont(bold_font)
-    self.label_.show()
-
-  def set_pos(self,xpos):
-    self.move(xpos,self.y_)
-    pass
-
-  def update_state(self):
-    pass
-'''
 
 ################################################################################
 class UserTag(QWidget):
@@ -131,15 +91,14 @@ class UserTag(QWidget):
     self.y_ = int(self.parent_.wall_height_ - self.parent_height_ * 3)
     self.x_ratio = abs(self.workspace_limits[0] - self.workspace_limits[1]) // self.width_ - 3#MURICA
     self.y_ratio = abs(self.workspace_limits[2] - self.workspace_limits[3]) // self.height_ + 2
-
-    self.resize(self.width_, self.height_)
-    self.move(int(self.parent_width_/2.0),self.y_)
     self.setStyleSheet("background-color:#ffffff;color:#222222")
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    self.show()   
     #self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform)
     self.setAutoFillBackground(True)
-    self.show()
-
+    self.move(int(self.parent_width_/2.0),self.y_)
+    self.resize(self.width_, self.height_)  
+  
   def create_joint_labels(self):
     for name in self.joints_.keys():
       joint_label = QLabel()
@@ -239,12 +198,13 @@ class WallframeInfobar(QWidget):
 
     # Set base app widget size and hints based on parameters
     self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    self.show()
     self.height_ = int(self.wall_height_ * self.height_perc_)
     self.width_ = self.wall_width_
     self.resize(self.width_, self.height_)
     self.move(self.wall_x_,self.wall_y_ + self.wall_height_-self.height_)
     self.setStyleSheet("background-color:#222222;color:#aaaaaa")
-    self.show()
+
 
     self.toast_notifier_ = QLabel("Initial Text",self);
     self.toast_w_ = int(self.width_ * 0.25)
@@ -332,7 +292,7 @@ class WallframeInfobar(QWidget):
     # Update or create new user tags
     for uid,user in self.users_.items():
       if uid in self.user_tags_.keys():
-        print uid
+        # print uid
         self.update_tag(uid)
       else:
         # make new tag

@@ -60,7 +60,7 @@ namespace wallframe{
     Eigen::Vector3d jtPosByName(std::string j){ return joint_positions_[j]; };
     Eigen::Vector3d jtPosBodyByName(std::string j){ return joint_body_positions_[j]; };
     Eigen::Vector3d jtPosById(int id){ return joint_positions_[joint_names_[id]]; };
-    Eigen::Vector3d jtPosBodyById(int id){ return joint_positions_[joint_names_[id]]; };
+    Eigen::Vector3d jtPosBodyById(int id){ return joint_body_positions_[joint_names_[id]]; };
     std::string jtNameById(int id){ return joint_names_[id]; }
     int jtIdByName(std::string id){
       for(unsigned int i=0;i<joint_names_.size();i++){
