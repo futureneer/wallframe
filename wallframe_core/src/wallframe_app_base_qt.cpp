@@ -57,6 +57,7 @@ namespace wallframe{
     connect( &__ros_ok_timer, SIGNAL(timeout()), this, SLOT(checkRosOk()) );
     __ros_ok_timer.start(15);
   }
+  
   //! Method to catch TERM sent to ROS and to close down the Qt thread as well
   void WallframeAppBaseQt::checkRosOk(){
     if(!ros::ok()){
