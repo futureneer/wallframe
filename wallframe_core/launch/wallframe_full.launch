@@ -1,0 +1,51 @@
+<launch>
+  <!-- Launch the Center Tracker -->
+  <include file="$(find wallframe_tracker)/launch/center_tracker.launch"/>
+  <!-- Launch the User Manager Tracker -->
+  <include file="$(find wallframe_user)/launch/wallframe_user_manager.launch"/>
+  <!-- Run the Infobar at the bottom of the screen that shows user avatar and messages -->
+  <node pkg="wallframe_core" name="wallframe_infobar" type="wallframe_infobar.py" output="screen"/>
+  
+  <group ns="/wallframe/core">
+    <!-- Parameters for the application manager -->
+    <arg name="app_manifest_path" default="$(find wallframe_core)/wallframe_application_manifest.yaml" />
+    <param name="paths/app_manifest" textfile="$(arg app_manifest_path)" />
+    <param name="paths/application_path" value="/home/kel/wallframe_workspace/wallframe_apps" /> 
+    <!-- Run the application manager -->
+    <node pkg="wallframe_core" name="wallframe_app_manager" type="wallframe_app_manager.py" output="screen"/>
+    </group>
+
+  <!-- Parameters for the application menu -->
+  <param name="/wallframe/menu/params/cursor_path" value="$(find wallframe_core)/assets/cursor_open.png" /> 
+  <param name="/wallframe/menu/params/cursor_path_alt" value="$(find wallframe_core)/assets/cursor_closed.png" /> 
+  <param name="/wallframe/menu/params/background_path" value="$(find wallframe_core)/assets/background.jpg" />
+  <!-- Run the application menu -->
+  <node pkg="wallframe_core" name="wallframe_app_menu" type="wallframe_app_menu.py" output="screen"/>
+  
+  <!-- General ROS parameters specific to your wall -->
+  <rosparam>
+    wallframe:
+      core:
+        params:
+          x: 1680
+          y: 24
+          width: 5760
+          height: 3197
+        default_app: image_storm
+      app:
+        params:
+          height_percentage: .97
+      infobar:
+        params:
+          height_percentage: .03    
+      menu:
+        params:
+          height_percentage: .97
+          workspace_size: [-1200,1200,-600,600,1500,3000]
+          border_scale: .02
+          y_offset: -600.0
+          screensaver: no
+  </rosparam>
+
+
+</launch>
